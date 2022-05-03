@@ -197,8 +197,10 @@ if __name__=='__main__':
         fpsCnt = 0.0
         
         if recPath is not None:
-            vidPath = os.path.join(recPath, 'video.bin')
-            vidQPath = os.path.join(recPath, 'videoQ.bin')
+            # vidPath = os.path.join(recPath, 'video.bin')
+            vidPath = os.path.join(recPath, 'sonar.bin')
+            # vidQPath = os.path.join(recPath, 'videoQ.bin')
+            vidQPath = os.path.join(recPath, 'sonarQ.bin')
             telemPath = os.path.join(recPath, 'telem.pkl')
             imgCnt = 0
             imRaw = None
@@ -225,7 +227,8 @@ if __name__=='__main__':
                 telId += 1                
                 curTopic = curData[1][0]
 
-                if curTopic == zmq_topics.topic_stereo_camera:
+                # if curTopic == zmq_topics.topic_stereo_camera:
+                if curTopic == zmq_topics.topic_sonar:
                     frameId += 1
                     hasHighRes = curData[1][-1]
                     metaData = pickle.loads(curData[1][1])
@@ -261,7 +264,7 @@ if __name__=='__main__':
                     
 
                 curTopic = data[1][0]
-                if curTopic == zmq_topics.topic_stereo_camera:
+                if curTopic == zmq_topics.topic_sonar:
                     fpsCnt+=1
                     if time.time() - fpsTic >= 5:
                         fps = fpsCnt/(time.time() - fpsTic)
@@ -316,7 +319,7 @@ if __name__=='__main__':
                         except:
                             expVal = metaData[3].value
                             
-                        videoMsg = [zmq_topics.topic_stereo_camera,
+                        videoMsg = [zmq_topics.topic_sonar,
                                             pickle.dumps((metaData[0], imLowRes.shape, expVal, metaData[2])),
                                                 imLowRes.tobytes()] # [topic, (frameId, frameShape, ts) rawFrame]
                         #print('-->', curTopic)

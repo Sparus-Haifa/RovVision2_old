@@ -124,6 +124,14 @@ class rovDataHandler(Thread):
         self.image = None 
         self.curFrameId = -1
         self.curExposure = -1
+
+
+        # sonar
+        self.initSonarImgSource()
+        self.sonar_image = None 
+        self.sonar_curFrameId = -1
+        self.sonar_curExposure = -1       
+
         
         self.pubData = True
         self.socket_pub = None
@@ -141,7 +149,16 @@ class rovDataHandler(Thread):
             self.imgSock.bind(('', config.udpPort))
         else:
             self.subs_socks.append(utils.subscribe([zmq_topics.topic_stereo_camera], zmq_topics.topic_camera_port))
+
+    def initSonarImgSource(self):
+        if not self.rawVideo:
+            self.sonar_imgSock =  socket.socket(socket.AF_INET, # Internet
+                         socket.SOCK_DGRAM) # UDP
+            self.sonar_imgSock.bind(('', config.sonar_udpPort))
+        else:
+            self.subs_socks.append(utils.subscribe([zmq_topics.topic_sonar], zmq_topics.topic_sonar_port))
         
+     
         
         
     def getNewImage(self):
@@ -156,6 +173,18 @@ class rovDataHandler(Thread):
             #print('--->', ret[0])
         return ret
     
+    def getNewSonarImage(self):
+        ret = [self.sonar_curFrameId, None]
+        if self.sonar_image is not None:
+            ret = [self.sonar_curFrameId, np.copy(self.sonar_image)]
+            self.sonar_image = None
+            #print("---image---", time.time())
+        else:
+            pass
+            #print(time.time(), "no image")
+            #print('--->', ret[0])
+        return ret
+
     def getTelemtry(self):
         if self.telemtry is not None:
             return self.telemtry.copy()
@@ -177,6 +206,7 @@ class rovDataHandler(Thread):
         message_dict={}
         rcv_cnt=0
         images = [None, None]
+        sonar_images = [None, None]
         bmargx,bmargy=config.viewer_blacks
         print('rovDataHandler running...')
         
@@ -191,6 +221,14 @@ class rovDataHandler(Thread):
                     images = [img]
                     rcv_cnt += 1
 
+                if len(select([self.sonar_imgSock],[],[],0.003)[0]) > 0:
+                    data, addr = self.sonar_imgSock.recvfrom(1024*64)
+                    self.sonar_curFrameId, self.sonar_curExposure, encIm = pickle.loads(data)
+                    sonar_img = cv2.imdecode(encIm, 1)
+                    
+                    sonar_images = [sonar_img]
+                    rcv_cnt += 1
+
             self.telemtry = None
             while True:
                 
@@ -201,7 +239,7 @@ class rovDataHandler(Thread):
                 for sock in socks:
                     ret = sock.recv_multipart()
                     topic = ret[0]
-                    if zmq_topics.topic_stereo_camera != topic:
+                    if topic not in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
                         topic, data = ret
                         data = pickle.loads(ret[1])
                         message_dict[topic] = data
@@ -223,8 +261,7 @@ class rovDataHandler(Thread):
                                 traceback.print_exc()
                                 #import ipdb; ipdb.set_trace()
                                 
-                    elif self.rawVideo and zmq_topics.topic_stereo_camera == topic:
-                        
+                    elif self.rawVideo and topic in [zmq_topics.topic_sonar]:  # zmq_topics.topic_stereo_camera
                         self.curFrameId, imShape, self.curExposure, ts = pickle.loads(ret[1])
                         #print('<><>', self.curFrameId, imShape, ts)
                         imRaw = np.frombuffer(ret[-1], dtype='uint8').reshape(imShape)
@@ -245,6 +282,23 @@ class rovDataHandler(Thread):
                 if 0:
                     cv2.imshow('3dviewer', showIm)
                     cv2.waitKey(10)
+
+            # sonar
+            sonar_showIm = None
+            if sonar_images[0] is not None:
+                #images[0] = cv2.cvtColor(images[0], cv2.COLOR_BGR2RGB)
+                fmt_cnt_l=image_enc_dec.decode(sonar_images[0])
+                draw_mono(sonar_images[0],message_dict,fmt_cnt_l)
+                
+                sonar_showIm = sonar_images[0]
+            
+            if sonar_showIm is not None:
+                #self.rovViewer.update_image(showIm)
+                self.sonar_image = sonar_showIm
+                sonar_images[0] = None
+                # if 0:
+                #     cv2.imshow('3dviewer', showIm)
+                #     cv2.waitKey(10)
                 
         print('bye bye!')
 
@@ -749,17 +803,20 @@ class rovViewerWindow(Frame):
         self.rovGuiCommandPublisher.send_multipart( [zmq_topics.topic_gui_autoFocus, data])
         
         
-    def update_image(self):
+    def update_image(self, resolution):
         
         self.frameId, rawImg = self.ROVHandler.getNewImage()
         if rawImg is not None:
             #self.img = Image.open(io.BytesIO(img)) ## jpg stream
             self.image = rawImg.copy()
             img = Image.fromarray(rawImg)
-            self.img = ImageTk.PhotoImage(img)
+            self.img = ImageTk.PhotoImage(img.resize(resolution))
             
             self.myStyle['disp_image'].configure(image=self.img)
             self.myStyle['disp_image'].image = self.img
+
+            # self.myStyle['disp_image2'].configure(image=self.img)
+            # self.myStyle['disp_image2'].image = self.img
             
             if self.cvWindow:
                 if not self.OpencvWinInit:
@@ -771,21 +828,50 @@ class rovViewerWindow(Frame):
                     self.initOpencvWin(False)
                     self.cvWindow = False
 
-        self.parent.after(10, self.update_image)
+        self.parent.after(10, self.update_image, resolution)
+
+
+    def update_sonar_image(self, resolution):
+        
+        self.frameId, rawImg = self.ROVHandler.getNewSonarImage()
+        if rawImg is not None:
+            #self.img = Image.open(io.BytesIO(img)) ## jpg stream
+            self.sonar_image = rawImg.copy()
+            img = Image.fromarray(rawImg)
+            self.sonar_img = ImageTk.PhotoImage(img.resize(resolution))
+            
+            # self.myStyle['disp_image'].configure(image=self.img)
+            # self.myStyle['disp_image'].image = self.img
+
+            self.myStyle['disp_image2'].configure(image=self.sonar_img)
+            self.myStyle['disp_image2'].image = self.sonar_img
+            
+            if self.cvWindow:
+                if not self.OpencvWinInit:
+                    self.initOpencvWin(True)
+                rawImg = cv2.cvtColor(rawImg, cv2.COLOR_BGR2RGB)
+                cv2.imshow(self.cvWinName, rawImg)
+                key = cv2.waitKey(1)
+                if key&0xff == ord('q') or key == 200: # 200 -> F11
+                    self.initOpencvWin(False)
+                    self.cvWindow = False
+
+        self.parent.after(10, self.update_sonar_image, resolution)
 
     
-    def make_image(self, name, col, row, width, height, char_width, char_height):
+    def make_image(self, name, col, row, x, y, char_width, char_height, update_function):
         path = "rov.jpg"
         self.img = Image.open(path)
+        self.img = self.img.resize((char_width, char_height))
         self.img = ImageTk.PhotoImage(self.img.resize((char_width, char_height), Image.NONE))
         lbl = Label(self.parent, image=self.img, width=char_width, height=char_height, borderwidth=2,
                     highlightbackground="white")
         lbl.image = self.img
-        lbl.grid(row=row, column=col, columnspan=width, rowspan=height, pady=5, padx=5, sticky="nw") #, sticky="nsew")
+        lbl.grid(row=0, column=0) #, columnspan=width, rowspan=height, pady=5, padx=5, sticky="nw") #, sticky="nsew")
         self.myStyle[name] = lbl
-        self.myStyle[name].place(x=15,y=35)
+        self.myStyle[name].place(x=x,y=y)
 
-        self.update_image()
+        update_function((char_width,char_height))
 
 
     def create_control_button(self, name, display_text, n_col, n_row, callback, toolTip = ""):
@@ -1296,7 +1382,8 @@ class rovViewerWindow(Frame):
         col1X = 15
         row1Y = 660
 
-        self.make_image(name='disp_image', col=1, row=row_index, width=10, height=7, char_width=968, char_height=608)
+        self.make_image(name='disp_image', col=1, row=row_index, x=15, y=40, char_width=968, char_height=608, update_function=self.update_image)
+        self.make_image(name='disp_image2', col=155, row=row_index+1, x=1250, y=660, char_width=600, char_height=370, update_function=self.update_sonar_image)
         row_index += initRow#15
         '''
         self.create_label_header(name="header", display_text1="Property", display_text2="Status",
@@ -1486,6 +1573,11 @@ class rovViewerWindow(Frame):
             self.ROVHandler.rawVideo = True
             self.ROVHandler.initImgSource()
             print("%s %s %s %s"%(self.w.skipFramesVar, self.w.saveAviVar.get(), self.w.saveTiffVar.get(), self.w.freeRunVar.get() ) )
+            print('cd ../scripts && ./runRec.sh %s %s %s %s %s && sleep 3'%(recFolder, str(int(self.w.skipFramesVar)),
+                                                                                            self.w.saveAviVar.get(), 
+                                                                                            self.w.saveTiffVar.get(),
+                                                                                            self.w.freeRunVar.get() ))
+
             os.system('cd ../scripts && ./runRec.sh %s %s %s %s %s && sleep 3'%(recFolder, str(int(self.w.skipFramesVar)), 
                                                                                             self.w.saveAviVar.get(), 
                                                                                             self.w.saveTiffVar.get(),

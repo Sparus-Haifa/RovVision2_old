@@ -22,6 +22,7 @@ fps=10
 
 groundIp = "192.168.3.11"
 udpPort = 33221
+sonar_udpPort = 33222
 
 
 #gstreamer
