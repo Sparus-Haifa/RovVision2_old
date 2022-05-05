@@ -35,14 +35,20 @@ tmux new-session -d -s sim
 
 #common for sim and hw
 new_6_win
-run 0 onboard controller.py
+run 0 sim pybullet_bridge.py
+sleep 2
+run 1 onboard controller.py
 #run 1 onboard sensors_gate.py
-run 1 onboard "imGate.py -l"
+run 2 onboard "imGate.py -l"
+run 3 onboard "sonGate.py -l"
 sleep 1
-runLoop 2 plugins manual_plugin.py
-runLoop 3 plugins depth_hold_plugin.py
-runLoop 4 plugins att_hold_plugin.py
-run 5 plugins oiTracker_plugin.py
+
+tmux new-window
+new_6_win
+runLoop 0 plugins manual_plugin.py
+runLoop 1 plugins depth_hold_plugin.py
+runLoop 2 plugins att_hold_plugin.py
+run 3 plugins oiTracker_plugin.py
 
 #tmux new-window
 #new_6_win
@@ -66,7 +72,7 @@ done
 tmux new-window
 new_6_win
 
-run 0 sim pybullet_bridge.py
+# run 0 sim pybullet_bridge.py
 run 1 utils recorder.py
 run 2 ground_control "rovViewer.py -s"
 run 3 ground_control joy_rov.py
