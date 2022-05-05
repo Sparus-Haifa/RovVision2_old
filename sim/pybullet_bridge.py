@@ -23,7 +23,7 @@ zmq_pub=utils.publisher(zmq_topics.topic_camera_port)
 pub_imu = utils.publisher(zmq_topics.topic_imu_port)
 pub_depth = utils.publisher(zmq_topics.topic_depth_port)
 
-pub_sonar = utils.publisher(zmq_topics.topic_sonar_port)
+# pub_sonar = utils.publisher(zmq_topics.topic_sonar_port)
 pub_motors = utils.publisher(zmq_topics.topic_motors_output_port)
 
 cvshow=0
@@ -213,7 +213,8 @@ def main():
             depthImg[depthImg>5000]=np.nan
             max_range=np.nanmax(depthImg)
             #print('sonar::',min_range,max_range)
-            pub_sonar.send_multipart([zmq_topics.topic_sonar,pickle.dumps([min_range,max_range])])
+            # nir commented the following:
+            # pub_sonar.send_multipart([zmq_topics.topic_sonar,pickle.dumps([min_range,max_range])])
 
             if cvshow:
                 cv2.imshow('depth',img_show)
