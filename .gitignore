@@ -1,6 +1,7 @@
 *.log
 __pycache__/
 *.pkl
+!sim/lambda.pkl
 bin
 notebooks/.ipynb_checkpoints/
 *.swp
