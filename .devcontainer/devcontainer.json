@@ -50,6 +50,6 @@
 	// "remoteUser": "vscode"
 
 	// "workspaceFolder": "/home/catkin_ws/src"
-	"workspaceFolder": "/"
+	"workspaceFolder": "/workspaces/RovVision2_old"
 
 }
