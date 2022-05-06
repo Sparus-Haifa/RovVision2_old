@@ -120,7 +120,8 @@ def vidProc(im, imLowRes, imPub = None):
             #curImName = '%08d.jpg'%frameId
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
             
-        if showVideo and 0:
+        if showVideo:
+            print('showing')
             cv2.namedWindow(winName, 0)
             cv2.imshow(winName, showIm) #im[:200,:])
             
@@ -197,10 +198,10 @@ if __name__=='__main__':
         fpsCnt = 0.0
         
         if recPath is not None:
-            # vidPath = os.path.join(recPath, 'video.bin')
-            vidPath = os.path.join(recPath, 'sonar.bin')
-            # vidQPath = os.path.join(recPath, 'videoQ.bin')
-            vidQPath = os.path.join(recPath, 'sonarQ.bin')
+            vidPath = os.path.join(recPath, 'video.bin')
+            sonPath = os.path.join(recPath, 'sonar.bin')
+            vidQPath = os.path.join(recPath, 'videoQ.bin')
+            sonQPath = os.path.join(recPath, 'sonarQ.bin')
             telemPath = os.path.join(recPath, 'telem.pkl')
             imgCnt = 0
             imRaw = None
@@ -211,6 +212,8 @@ if __name__=='__main__':
             telFid  = None
             vidFid  = None
             vidQFid = None
+            sonFid  = None
+            sonQFid = None
             
             if os.path.exists(telemPath):
                 telFid = open(telemPath, 'rb')
@@ -218,6 +221,10 @@ if __name__=='__main__':
                 vidFid = open(vidPath, 'rb')
             if os.path.exists(vidQPath):
                 vidQFid = open(vidQPath, 'rb')
+            if os.path.exists(sonPath) and highQuality:
+                sonFid = open(sonPath, 'rb')
+            if os.path.exists(sonQPath):
+                sonQFid = open(sonQPath, 'rb')
             
             telId = 0
             # skip frame loop 
@@ -227,8 +234,13 @@ if __name__=='__main__':
                 telId += 1                
                 curTopic = curData[1][0]
 
-                # if curTopic == zmq_topics.topic_stereo_camera:
-                if curTopic == zmq_topics.topic_sonar:
+                if curTopic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
+                # if curTopic == zmq_topics.topic_sonar:
+                    file_ptr = sonFid
+                    file_q_ptr = sonQFid                    
+                    if curTopic == zmq_topics.topic_stereo_camera:
+                        file_ptr = vidFid
+                        file_q_ptr = vidQFid
                     frameId += 1
                     hasHighRes = curData[1][-1]
                     metaData = pickle.loads(curData[1][1])
@@ -236,11 +248,11 @@ if __name__=='__main__':
                     imShape  = metaData[1]
                 
                     try:
-                        imLowRes = np.fromfile(vidQFid, count=imShape[1]//2*imShape[0]//2*imShape[2], 
+                        imLowRes = np.fromfile(file_q_ptr, count=imShape[1]//2*imShape[0]//2*imShape[2], 
                                            dtype = 'uint8').reshape((imShape[0]//2, imShape[1]//2, imShape[2] ))
 
                         if hasHighRes:
-                            imRaw = np.fromfile(vidFid, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
+                            imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
                     except:
                         pass
             else:
@@ -264,7 +276,19 @@ if __name__=='__main__':
                     
 
                 curTopic = data[1][0]
-                if curTopic == zmq_topics.topic_sonar:
+                print(curTopic)
+                # if curTopic == zmq_topics.topic_sonar:
+                #     break
+                if curTopic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
+                    print('img')
+                    file_ptr = sonFid
+                    file_q_ptr = sonQFid                    
+                    if curTopic == zmq_topics.topic_stereo_camera:
+                        file_ptr = vidFid
+                        file_q_ptr = vidQFid
+                    frameId += 1
+                    hasHighRes = curData[1][-1]
+                    metaData = pickle.loads(curData[1][1])
                     fpsCnt+=1
                     if time.time() - fpsTic >= 5:
                         fps = fpsCnt/(time.time() - fpsTic)
@@ -282,11 +306,12 @@ if __name__=='__main__':
                     # load image
                     
                     if not lowResEndFlag:
-                        
+                        # print('trying')
                         try:
-                            imLowRes = np.fromfile(vidQFid, count=imShape[1]//2*imShape[0]//2*imShape[2], 
+                            imLowRes = np.fromfile(file_q_ptr, count=imShape[1]//2*imShape[0]//2*imShape[2], 
                                                    dtype = 'uint8').reshape((imShape[0]//2, imShape[1]//2, imShape[2] ))
-                        except:
+                        except Exception as e:
+                            print(e)
                             imLowRes = None
                             if not lowResEndFlag:
                                 print('low res video ended')
@@ -295,8 +320,9 @@ if __name__=='__main__':
                                 continue
                         if hasHighRes:
                             try:
-                                imRaw = np.fromfile(vidFid, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
-                            except:
+                                imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
+                            except Exception as e:
+                                print(e)
                                 imRaw = None
                                 if not highResEndFlag:
                                     print('high res video ended')
@@ -319,15 +345,20 @@ if __name__=='__main__':
                         except:
                             expVal = metaData[3].value
                             
-                        videoMsg = [zmq_topics.topic_sonar,
+                        # videoMsg = [zmq_topics.topic_sonar,
+                        videoMsg = [zmq_topics.topic_stereo_camera,
                                             pickle.dumps((metaData[0], imLowRes.shape, expVal, metaData[2])),
                                                 imLowRes.tobytes()] # [topic, (frameId, frameShape, ts) rawFrame]
+                        if curTopic == zmq_topics.topic_sonar:
+                            videoMsg[0]=zmq_topics.topic_sonar
                         #print('-->', curTopic)
                         topicPubDict[curTopic].send_multipart(videoMsg)
                         
                 else:
                     #recTs = data[0]
+                    # if curTopic != zmq_topics.topic_sonar:
                     telData = pickle.loads(data[1][1])
+                    print('sending...')
                     topicPubDict[curTopic].send_multipart([curTopic, pickle.dumps(telData)] )
                     
                     #pass

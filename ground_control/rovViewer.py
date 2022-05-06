@@ -263,11 +263,16 @@ class rovDataHandler(Thread):
                                 traceback.print_exc()
                                 #import ipdb; ipdb.set_trace()
                                 
-                    elif self.rawVideo and topic in [zmq_topics.topic_sonar]:  # zmq_topics.topic_stereo_camera
+                    # elif self.rawVideo and topic in [zmq_topics.topic_sonar]:  # zmq_topics.topic_stereo_camera
+                    elif self.rawVideo and topic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
                         self.curFrameId, imShape, self.curExposure, ts = pickle.loads(ret[1])
                         #print('<><>', self.curFrameId, imShape, ts)
                         imRaw = np.frombuffer(ret[-1], dtype='uint8').reshape(imShape)
-                        images = [imRaw]
+                        if topic == zmq_topics.topic_stereo_camera:
+                            images = [imRaw]
+                        if topic == zmq_topics.topic_sonar:
+                            sonar_images = [imRaw]
+                        
     
             showIm = None
             if images[0] is not None:

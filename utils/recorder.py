@@ -50,10 +50,13 @@ doRec = False
 telemFile = None
 videoFile = None
 videoQFile = None
+sonarFile = None
+sonarQFile = None
+imgCnt = 0
 
 recordsBasePath = "../records/"
 def initRec():
-    global telemFile, videoFile, videoQFile
+    global telemFile, videoFile, videoQFile, sonarFile, sonarQFile
     recName = time.strftime("%Y%m%d_%H%M%S", time.localtime())
     recPath = os.path.join(recordsBasePath, recName)
     if not os.path.exists(recPath):
@@ -62,6 +65,8 @@ def initRec():
     telemFile = os.path.join(recPath, 'telem.pkl')
     videoFile = os.path.join(recPath, 'video.bin')
     videoQFile = os.path.join(recPath, 'videoQ.bin')
+    sonarFile = os.path.join(recPath, 'sonar.bin')
+    sonarQFile = os.path.join(recPath, 'sonarQ.bin')
     print(recPath)
     return recPath
 
@@ -71,8 +76,37 @@ if debugVideo:
     cv2.namedWindow('low', 0)
     cv2.namedWindow('high', 0)
 
+def save_image(ts, ret, output_file, output_q_file):
+    global imgCnt
+    imgCnt += 1
+    imMetaData = pickle.loads(ret[-3])
+    
+    hasHighQuality = imMetaData[-1]
+    if hasHighQuality:
+        with open(output_file, 'ab') as fid:
+            # write image raw data
+            fid.write(ret[-1])
+            
+    '''
+    imShape = pickle.loads(ret[1])[1]
+    imRaw = np.frombuffer(ret[-1], dtype='uint8').reshape(imShape)
+    
+    low = cv2.resize(imRaw, (imShape[1]//2, imShape[0]//2))
+    '''
+    low = ret[-2]
+    with open(output_q_file, 'ab') as fid:
+        # write image raw data
+        fid.write(low) #.tobytes())
+
+    with open(telemFile, 'ab') as fid:
+        # write image metadata
+        recImMetadata = ret[:-2]
+        recImMetadata.append(hasHighQuality)
+        pickle.dump([ts, recImMetadata], fid) 
+
+
 def recorder():
-    global telemFile, videoFile, videoQFile, doRec
+    global telemFile, videoFile, videoQFile, sonarFile, sonarQFile, doRec, imgCnt
     
     
     cnt = 0
@@ -109,30 +143,12 @@ def recorder():
                     
                 if doRec:
                     if topic == zmq_topics.topic_stereo_camera:
-                        imgCnt += 1
-                        imMetaData = pickle.loads(ret[-3])
-                        
-                        hasHighQuality = imMetaData[-1]
-                        if hasHighQuality:
-                            with open(videoFile, 'ab') as fid:
-                                # write image raw data
-                                fid.write(ret[-1])
-                                
-                        '''
-                        imShape = pickle.loads(ret[1])[1]
-                        imRaw = np.frombuffer(ret[-1], dtype='uint8').reshape(imShape)
-                        
-                        low = cv2.resize(imRaw, (imShape[1]//2, imShape[0]//2))
-                        '''
-                        low = ret[-2]
-                        with open(videoQFile, 'ab') as fid:
-                            # write image raw data
-                            fid.write(low) #.tobytes())
-                        with open(telemFile, 'ab') as fid:
-                            # write image metadata
-                            recImMetadata = ret[:-2]
-                            recImMetadata.append(hasHighQuality)
-                            pickle.dump([ts, recImMetadata], fid) 
+                        save_image(ts, ret, videoFile, videoQFile)
+                    elif topic == zmq_topics.topic_sonar:
+                        save_image(ts, ret, sonarFile, sonarQFile)
+
+
+
                     else:
                         with open(telemFile, 'ab') as fid:
                             pickle.dump([ts, ret], fid)
