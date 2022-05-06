@@ -59,6 +59,7 @@ def CallBackFunc(event, x, y, flags, params):
 if showVideo:
     winName = 'player'
     winNameLowRes = 'player - low Res'
+    winNameLowResSonar = 'player - low Res - sonar'
     cv2.namedWindow(winNameLowRes, 0)
     #cv2.setMouseCallback(winName, CallBackFunc)
 
@@ -79,7 +80,7 @@ writer = None
 writerLowRes = None
 
 
-def vidProc(im, imLowRes, imPub = None):
+def vidProc(curTopic, im, imLowRes, imPub = None):
     global curDelay, highSpeed, imgsPath, writer, writerLowRes
     
 
@@ -121,8 +122,7 @@ def vidProc(im, imLowRes, imPub = None):
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
             
         if showVideo:
-            print('showing')
-            cv2.namedWindow(winName, 0)
+            # print('showing')
             cv2.imshow(winName, showIm) #im[:200,:])
             
 
@@ -148,7 +148,13 @@ def vidProc(im, imLowRes, imPub = None):
             writerLowRes.write(showImLow)
             
         if showVideo:
-            cv2.imshow(winNameLowRes, showImLow) #im[:200,:])
+            if curTopic == zmq_topics.topic_stereo_camera:
+                window_topic = winNameLowRes
+            else:
+                window_topic = winNameLowResSonar
+            # zmq_topics.topic_sonar
+            cv2.namedWindow(winName, 0)
+            cv2.imshow(window_topic, showImLow) #im[:200,:])
 
             
 
@@ -331,7 +337,7 @@ if __name__=='__main__':
                         else:
                             imRaw = None
                         
-                        ret = vidProc(imRaw, imLowRes)
+                        ret = vidProc(curTopic, imRaw, imLowRes)
                        
                         if not ret:
                             break
