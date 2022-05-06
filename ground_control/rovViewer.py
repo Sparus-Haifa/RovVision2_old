@@ -30,7 +30,7 @@ sys.path.append('..')
 import config
 import zmq_topics
 import zmq_wrapper as utils
-from annotations import draw_mono
+from annotations import draw_mono, draw_sonar
 import numpy as np
 import cv2
 from select import select
@@ -295,7 +295,7 @@ class rovDataHandler(Thread):
             if sonar_images[0] is not None:
                 #images[0] = cv2.cvtColor(images[0], cv2.COLOR_BGR2RGB)
                 fmt_cnt_l=image_enc_dec.decode(sonar_images[0])
-                draw_mono(sonar_images[0],message_dict,fmt_cnt_l)
+                draw_sonar(sonar_images[0],message_dict,fmt_cnt_l)
                 
                 sonar_showIm = sonar_images[0]
             
