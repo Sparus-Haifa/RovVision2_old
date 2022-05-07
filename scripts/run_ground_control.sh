@@ -31,4 +31,8 @@ run 2 ground_control "rovViewer.py"
 #run 2 web "--version && FLASK_APP=server.py flask run"
 #run 3 web "--version && sleep 3 && firefox http://127.0.0.1:5000/static/html/ropedive.html --new-window  --new-tab -url http://127.0.0.1:5000/static/html/checklists.html"
 
+
+runShell 3 scripts ./run_sonar_reconfigure_docker.sh
+
+
 tmux att
