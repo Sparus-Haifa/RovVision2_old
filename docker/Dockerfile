@@ -2,8 +2,12 @@
 # FROM ubuntu:bionic
 # FROM python:3.7
 # [Choice] Ubuntu version (use ubuntu-22.04 or ubuntu-18.04 on local arm64/Apple Silicon): ubuntu-22.04, ubuntu-20.04, ubuntu-18.04
-ARG VARIANT="jammy"
-FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
+# ARG VARIANT="jammy"
+# FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
+
+FROM ubuntu:18.04
+
+
 
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES \
@@ -13,6 +17,14 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
 
 # ENV DEBIAN_FRONTEND=noninteractive
 ARG DEBIAN_FRONTEND=noninteractive
+
+
+RUN apt-get update && \
+    apt-get -qy full-upgrade && \
+    apt-get install -qy curl && \
+    apt-get install -qy curl && \
+    curl -sSL https://get.docker.com/ | sh
+
 
 ######## some base installs ########
 RUN apt-get update && apt-get -y upgrade
@@ -104,3 +116,7 @@ RUN apt-get autoremove -y
 
 # RUN sudo chown -R docker:docker /home/docker
 # #RUN sudo service udev restart
+
+
+
+# USER vscode

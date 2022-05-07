@@ -1,3 +1,4 @@
+#!/bin/bash
 demo=false
 if [ "$1" = "demo" ]; then
     echo "demo mode"
@@ -12,5 +13,5 @@ docker run \
     --env="QT_X11_NO_MITSHM=1" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --privileged \
-    --name ros \
-    ros_sonar_image /bin/bash -it -c "roslaunch sonar_zmq run.launch demo:=$demo"
+    --name ros_sonar \
+    ros_sonar /bin/bash -it -c "roslaunch sonar_zmq run.launch demo:=$demo"
