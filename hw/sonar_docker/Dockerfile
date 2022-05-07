@@ -92,7 +92,7 @@ WORKDIR /home/catkin_ws/src
 
 
 RUN git clone https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver.git
-RUN cd oculus_sonar_driver && git checkout 926eb59065b82cddbbf94f07469aebfa1c3720ed && cd ..
+# RUN cd oculus_sonar_driver && git checkout 926eb59065b82cddbbf94f07469aebfa1c3720ed && cd ..
 # RUN apt-get install -y python3-vcstool
 # RUN vcs import --input oculus_sonar_driver/oculus_sonar_driver.rosinstall
 RUN git clone https://github.com/apl-ocean-engineering/hydrographic_msgs.git
