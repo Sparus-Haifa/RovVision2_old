@@ -74,6 +74,10 @@ RUN apt-get update
 #install core library and build dependencies
 RUN apt-get -y install git g++ cmake libsqlite3-dev
 
+# docker x11
+RUN apt-get install -y gedit
+RUN apt-get install -y x11-xserver-utils
+
 RUN apt-get clean
 RUN apt-get autoclean
 RUN apt-get autoremove -y
