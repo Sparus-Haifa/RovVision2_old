@@ -825,8 +825,8 @@ class rovViewerWindow(Frame):
             self.myStyle['disp_image'].configure(image=self.img)
             self.myStyle['disp_image'].image = self.img
 
-            # self.myStyle['disp_image2'].configure(image=self.img)
-            # self.myStyle['disp_image2'].image = self.img
+            # self.myStyle['disp_image_sonar'].configure(image=self.img)
+            # self.myStyle['disp_image_sonar'].image = self.img
             
             if self.cvWindow:
                 if not self.OpencvWinInit:
@@ -848,14 +848,14 @@ class rovViewerWindow(Frame):
             #self.img = Image.open(io.BytesIO(img)) ## jpg stream
             self.sonar_image = rawImg.copy()
             img = Image.fromarray(rawImg)
-            resolution = (self.myStyle['disp_image2']['width'], self.myStyle['disp_image2']['height'])
+            resolution = (self.myStyle['disp_image_sonar']['width'], self.myStyle['disp_image_sonar']['height'])
             self.sonar_img = ImageTk.PhotoImage(img.resize(resolution))
             
             # self.myStyle['disp_image'].configure(image=self.img)
             # self.myStyle['disp_image'].image = self.img
 
-            self.myStyle['disp_image2'].configure(image=self.sonar_img)
-            self.myStyle['disp_image2'].image = self.sonar_img
+            self.myStyle['disp_image_sonar'].configure(image=self.sonar_img)
+            self.myStyle['disp_image_sonar'].image = self.sonar_img
             
             if self.cvWindow:
                 if not self.OpencvWinInit:
@@ -1403,7 +1403,7 @@ class rovViewerWindow(Frame):
         row1Y = 660
 
         self.make_image(name='disp_image', col=1, row=row_index, x=15, y=40, char_width=968, char_height=608, update_function=self.update_image)
-        self.make_image(name='disp_image2', col=155, row=row_index+1, x=1250, y=660, char_width=600, char_height=370, update_function=self.update_sonar_image)
+        self.make_image(name='disp_image_sonar', col=155, row=row_index+1, x=1250, y=660, char_width=600, char_height=370, update_function=self.update_sonar_image)
 
 
         row_index += initRow#15
@@ -1681,7 +1681,7 @@ class rovViewerWindow(Frame):
             self.initOpencvWin(False)
 
     def toggle(self):
-        self.myStyle['disp_image'], self.myStyle['disp_image2'] =self.myStyle['disp_image2'], self.myStyle['disp_image']
+        self.myStyle['disp_image'], self.myStyle['disp_image_sonar'] =self.myStyle['disp_image_sonar'], self.myStyle['disp_image']
             
     
     def fullVideoScreenEvent(self, event):
