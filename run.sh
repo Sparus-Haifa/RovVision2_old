@@ -20,7 +20,7 @@ docker run  \
     --env="QT_X11_NO_MITSHM=1" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --privileged  \
-    --volume="/home/zeged/proj/blueROV/RovVision2_old:/home/docker" \
+    --volume="${PWD}:/home/docker" \
     --volume="/var/run/docker.sock:/var/run/docker.sock" \
     --name rov \
     blue_rov /bin/bash -it -c \
