@@ -1,0 +1,16 @@
+
+<launch>
+
+
+  <node pkg="sonar_zmq" type="run.py" name="run" output="screen" />
+
+  <arg name="demo" default="false"/>
+  <group if="$(arg demo)">
+  <!-- stuff that will only be evaluated if demo is true -->
+  <node pkg="rosbag" type="play" name="player" output="log" args="--clock /home/bags/example.bag -l" />
+  </group> 
+
+  <include file="$(find oculus_sonar_driver)/launch/default_ros.launch" unless="$(arg demo)" />
+
+
+</launch>
