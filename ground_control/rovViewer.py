@@ -812,13 +812,14 @@ class rovViewerWindow(Frame):
         self.rovGuiCommandPublisher.send_multipart( [zmq_topics.topic_gui_autoFocus, data])
         
         
-    def update_image(self, resolution):
+    def update_image(self):
         
         self.frameId, rawImg = self.ROVHandler.getNewImage()
         if rawImg is not None:
             #self.img = Image.open(io.BytesIO(img)) ## jpg stream
             self.image = rawImg.copy()
             img = Image.fromarray(rawImg)
+            resolution = (self.myStyle['disp_image']['width'], self.myStyle['disp_image']['height'])
             self.img = ImageTk.PhotoImage(img.resize(resolution))
             #import ipdb; ipdb.set_trace() 
             self.myStyle['disp_image'].configure(image=self.img)
@@ -837,16 +838,17 @@ class rovViewerWindow(Frame):
                     self.initOpencvWin(False)
                     self.cvWindow = False
 
-        self.parent.after(10, self.update_image, resolution)
+        self.parent.after(10, self.update_image)
 
 
-    def update_sonar_image(self, resolution):
+    def update_sonar_image(self):
         
         self.frameId, rawImg = self.ROVHandler.getNewSonarImage()
         if rawImg is not None:
             #self.img = Image.open(io.BytesIO(img)) ## jpg stream
             self.sonar_image = rawImg.copy()
             img = Image.fromarray(rawImg)
+            resolution = (self.myStyle['disp_image2']['width'], self.myStyle['disp_image2']['height'])
             self.sonar_img = ImageTk.PhotoImage(img.resize(resolution))
             
             # self.myStyle['disp_image'].configure(image=self.img)
@@ -865,7 +867,7 @@ class rovViewerWindow(Frame):
                     self.initOpencvWin(False)
                     self.cvWindow = False
 
-        self.parent.after(10, self.update_sonar_image, resolution)
+        self.parent.after(10, self.update_sonar_image)
 
     def addTooltip(self, widget, toolTip):
         try: 
@@ -889,7 +891,7 @@ class rovViewerWindow(Frame):
 
         self.addTooltip(self.myStyle[name], " Left click -> start/stop track \n Middle click -> auto focus \n Right click -> snap shot")
 
-        update_function((char_width,char_height))
+        update_function()
 
 
     def create_control_button(self, name, display_text, n_col, n_row, callback, toolTip = ""):
@@ -1402,6 +1404,8 @@ class rovViewerWindow(Frame):
 
         self.make_image(name='disp_image', col=1, row=row_index, x=15, y=40, char_width=968, char_height=608, update_function=self.update_image)
         self.make_image(name='disp_image2', col=155, row=row_index+1, x=1250, y=660, char_width=600, char_height=370, update_function=self.update_sonar_image)
+
+
         row_index += initRow#15
         '''
         self.create_label_header(name="header", display_text1="Property", display_text2="Status",
@@ -1415,6 +1419,9 @@ class rovViewerWindow(Frame):
 
         self.create_button("showOpenCV", "Full screen", 0, 0, self.openVideoWindow)
         self.myStyle["showOpenCV_button"].place(x=15, y=2) # put the button on the top left corner
+
+        self.create_button("toggle", "Toggle", 0, 0, self.toggle)
+        self.myStyle["toggle_button"].place(x=200, y=2) # put the button on the top left corner
 
         self.create_text_box(name="ROV_Data", label_text="ROV ip:", display_text="192.168.3.10", n_col=rtDataCol,  n_row=rtDataRow, textbox_width=15)
         self.myStyle["ROV_Data_label"].place(x=col1X, y=row1Y)
@@ -1672,6 +1679,9 @@ class rovViewerWindow(Frame):
         self.cvWindow = not self.cvWindow
         if not self.cvWindow:
             self.initOpencvWin(False)
+
+    def toggle(self):
+        self.myStyle['disp_image'], self.myStyle['disp_image2'] =self.myStyle['disp_image2'], self.myStyle['disp_image']
             
     
     def fullVideoScreenEvent(self, event):

@@ -61,7 +61,9 @@ async def recv_and_process():
                 inImgCnt += 1
                 
                 frame_cnt,shape,ts, camState, hasHighRes = pickle.loads(ret[1])
-                imgl = np.frombuffer(ret[-2],'uint8').reshape( (shape[0]//2, shape[1]//2, 3) ).copy()
+                # imgl = np.frombuffer(ret[-2],'uint8').reshape( (shape[0], shape[1], 3) ).copy()
+                imgl = np.frombuffer(ret[-1],'uint8').reshape( (shape[0], shape[1], 3) ).copy()
+
                 
                 if 0: #doResize:
                     imgl = cv2.resize(imgl, (sx,sy))
