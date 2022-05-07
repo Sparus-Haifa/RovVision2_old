@@ -1403,7 +1403,7 @@ class rovViewerWindow(Frame):
         row1Y = 660
 
         self.make_image(name='disp_image', col=1, row=row_index, x=15, y=40, char_width=968, char_height=608, update_function=self.update_image)
-        self.make_image(name='disp_image_sonar', col=155, row=row_index+1, x=1250, y=660, char_width=600, char_height=370, update_function=self.update_sonar_image)
+        self.make_image(name='disp_image_sonar', col=155, row=row_index+1, x=1250, y=660, char_width=580, char_height=350, update_function=self.update_sonar_image)
 
 
         row_index += initRow#15
