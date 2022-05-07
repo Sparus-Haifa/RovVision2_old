@@ -1,6 +1,9 @@
 # FROM ubuntu:20.04
-FROM ubuntu:bionic
+# FROM ubuntu:bionic
 # FROM python:3.7
+# [Choice] Ubuntu version (use ubuntu-22.04 or ubuntu-18.04 on local arm64/Apple Silicon): ubuntu-22.04, ubuntu-20.04, ubuntu-18.04
+ARG VARIANT="jammy"
+FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES \
@@ -9,6 +12,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
 # ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 ######## some base installs ########
 RUN apt-get update && apt-get -y upgrade
@@ -33,6 +37,8 @@ RUN apt-get -y install libgl1-mesa-glx
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" TZ="Asia/Jerusalem" apt-get -y install python3-tk
 RUN apt-get -y install libjpeg-dev zlib1g-dev
 #RUN apt-get update
+
+RUN apt-get -y install libgtk2.0-dev
 
 #RUN apt-get update && apt-get -y upgrade
 #RUN pip3 install --upgrade pip
