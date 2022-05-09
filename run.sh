@@ -27,9 +27,11 @@ docker run  \
     --privileged  \
     --volume="${PWD}:/home/docker" \
     --volume="/var/run/docker.sock:/var/run/docker.sock" \
-    --name rov \
-    --privileged \
     --volume="/dev/bus/usb:/dev/bus/usb" \
+    --volume="/dev:/dev" \
+    --volume="/proc:/proc" \
+    --gpus="all" \
+    --name rov \
     blue_rov /bin/bash -it -c \
     "cd scripts && \
     $cmd && \

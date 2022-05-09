@@ -1,3 +1,8 @@
+import os
+
+if "XDG_RUNTIME_DIR" not in os.environ:
+    os.environ["XDG_RUNTIME_DIR"] = "/tmp/runtime-root"
+    
 import pygame,time,zmq,pickle,sys
 #pygame.init() ### =100%cpu
 sys.path.append('../')
@@ -6,7 +11,10 @@ import zmq_topics
 import zmq_wrapper as utils
 
 pygame.display.init()
+print('display init')
 pygame.joystick.init()
+print('joystick init')
+
 joystick = pygame.joystick.Joystick(0)
 joystick.init()
 name = joystick.get_name()
