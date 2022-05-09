@@ -11,6 +11,11 @@ if [ "$1" = "local" ]; then
     cmd="./run_ground_control.sh"
 fi
 
+if [ "$1" = "bash" ]; then
+    echo "bash"
+    cmd="/bin/bash"
+fi
+
 
 docker run  \
     -it \
@@ -23,6 +28,8 @@ docker run  \
     --volume="${PWD}:/home/docker" \
     --volume="/var/run/docker.sock:/var/run/docker.sock" \
     --name rov \
+    --privileged \
+    --volume="/dev/bus/usb:/dev/bus/usb" \
     blue_rov /bin/bash -it -c \
     "cd scripts && \
     $cmd && \
@@ -30,3 +37,4 @@ docker run  \
     docker kill ros_sonar_reconfigure || true"
 
 #  && docker kill ros_sonar_reconfigure
+# -v $HOME/.ssh:/home/user/.ssh:ro \
