@@ -91,6 +91,17 @@ RUN apt-get -y install git g++ cmake libsqlite3-dev
 RUN apt-get install -y gedit
 RUN apt-get install -y x11-xserver-utils
 
+
+
+# pyueye
+## https://github.com/BackupGGCode/pyueye
+## https://code.google.com/archive/p/pyueye/downloads
+RUN apt-get update && apt-get install -y udev
+COPY hw/idsCam/uEye_Linux_350_64Bit/ueyesdk-setup-3.50-usb-amd64.gz.run /
+RUN chmod +x /ueyesdk-setup-3.50-usb-amd64.gz.run
+RUN /ueyesdk-setup-3.50-usb-amd64.gz.run
+RUN pip3 install pyueye
+
 RUN apt-get clean
 RUN apt-get autoclean
 RUN apt-get autoremove -y
