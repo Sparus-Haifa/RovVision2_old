@@ -2,8 +2,8 @@
 # this dockerfile roughly follows the 'Ubuntu install of ROS Melodic' from:
 #   http://wiki.ros.org/melodic/Installation/Ubuntu
 #
-# ARG BASE_IMAGE=nvcr.io/nvidia/l4t-base:r32.5.0
-ARG BASE_IMAGE=ubuntu:bionic
+ARG BASE_IMAGE=nvcr.io/nvidia/l4t-base:r32.5.0
+# ARG BASE_IMAGE=ubuntu:bionic
 FROM ${BASE_IMAGE}
 
 # ARG ROS_PKG=ros_base
@@ -95,6 +95,8 @@ RUN git clone https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver.git
 # RUN cd oculus_sonar_driver && git checkout 926eb59065b82cddbbf94f07469aebfa1c3720ed && cd ..
 # RUN apt-get install -y python3-vcstool
 # RUN vcs import --input oculus_sonar_driver/oculus_sonar_driver.rosinstall
+
+
 RUN git clone https://github.com/apl-ocean-engineering/hydrographic_msgs.git
 RUN cd hydrographic_msgs && git checkout 8a053bd4d14955363940e63c14e646d28da75504 && cd ..
 
@@ -126,11 +128,13 @@ RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make'
 
 
 # Dev / Debus tools
-RUN apt-get install -y net-tools \
-    nano \
-    gedit \
-    iputils-ping \
-    netcat
+RUN apt-get install -y net-tools
+RUN apt-get install -y nano
+RUN apt-get install -y gedit
+# RUN apt-get install -y iputils
+# RUN apt-get install -y iputils-ping
+RUN apt-get install -y netcat
+
 
 
 # sonar_zmq pkg
@@ -171,3 +175,5 @@ RUN echo "source /home/catkin_ws/devel/setup.bash" >> ~/.bashrc
 # CMD ["bash"]
 # CMD ["roscore"]
 # WORKDIR /
+
+ADD oculus_sonar_driver/launch/default_ros.launch /home/catkin_ws/src/oculus_sonar_driver/launch/default_ros.launch

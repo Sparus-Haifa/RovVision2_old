@@ -67,9 +67,11 @@ run 1 hw camIds.py
 run 2 hw vnav.py
 # run 3 hw sonar.py
 run 3 onboard sonGate.py
-# run 4 utils recorder.py
-run 4 utils recorder_sonar.py
-run 5 hw ros_sonar.py
+run 4 utils recorder.py
+# run 4 utils recorder_sonar.py
+# run 5 hw ros_sonar.py
+runShell 5 hw/sonar_docker "./run.sh"
+
 #runShell 5 . jtop
 #tmux att
 
