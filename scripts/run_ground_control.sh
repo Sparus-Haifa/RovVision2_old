@@ -25,7 +25,7 @@ viewer_arg=""
 if [ "$1" = "local" ]; then
     echo "local"
     cmd="./run_ground_control.sh"
-    viewer_arg = "-r"
+    viewer_arg="-r"
 fi
 
 
