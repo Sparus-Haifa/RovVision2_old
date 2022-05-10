@@ -400,7 +400,7 @@ def draw_sonar(img,message_dict,fmt_cnt_l):
 
 
     # img = overlay.copy()
-    cv2.addWeighted(overlay, 0.1, img, 0.9, 0, img)
+    cv2.addWeighted(overlay, 0.2, img, 0.8, 0, img)
 
 
 
