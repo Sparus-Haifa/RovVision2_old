@@ -8,7 +8,7 @@ fi
 
 if [ "$1" = "local" ]; then
     echo "local"
-    cmd="./run_ground_control.sh"
+    cmd="./run_ground_control.sh local"
 fi
 
 if [ "$1" = "bash" ]; then
