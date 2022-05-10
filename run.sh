@@ -35,6 +35,7 @@ docker run  \
     blue_rov /bin/bash -it -c \
     "cd scripts && \
     $cmd && \
+    ./sysRun.sh kill && \
     docker kill ros_sonar || true && \
     docker kill ros_sonar_reconfigure || true"
 
