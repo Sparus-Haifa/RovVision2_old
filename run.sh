@@ -16,6 +16,12 @@ if [ "$1" = "bash" ]; then
     cmd="/bin/bash"
 fi
 
+if [ "$1" = "auto" ]; then
+    echo "auto"
+    cmd="./run_onboard.sh auto && tmux att"
+
+fi
+
 
 docker run  \
     -it \

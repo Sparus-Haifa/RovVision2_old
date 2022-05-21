@@ -58,6 +58,13 @@ do
 done
 
 
+auto=""
+if [ "$1" = "auto" ]; then
+    echo "auto"
+    auto="-a"
+fi
+
+
 tmux new-window
 new_6_win
 
@@ -67,7 +74,7 @@ run 1 hw camIds.py
 run 2 hw vnav.py
 # run 3 hw sonar.py
 run 3 onboard sonGate.py
-run 4 utils recorder.py
+run 4 utils "recorder.py $auto"
 # run 4 utils recorder_sonar.py
 # run 5 hw ros_sonar.py
 runShell 5 hw/sonar_docker "./run.sh"

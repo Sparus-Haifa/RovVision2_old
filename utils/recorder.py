@@ -16,6 +16,11 @@ import mps
 import watchdog
 import cv2
 from select import select
+import argparse
+
+parser = argparse.ArgumentParser(description='recorder', formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('-a', '--auto', action='store_true', help='Auto record video')
+args = parser.parse_args()
 
 
 current_command=[0 for _ in range(8)] # 8 thrusters
@@ -109,7 +114,8 @@ def save_image(ts, ret, output_file, output_q_file):
 
 def recorder():
     global telemFile, videoFile, videoQFile, sonarFile, sonarQFile, doRec, imgCnt
-    
+
+
     
     cnt = 0
     imgCnt = 0
@@ -137,6 +143,8 @@ def recorder():
 
                 if topic == zmq_topics.topic_system_state:
                     newDoRec = pickle.loads(ret[1])['record']
+                    if args.auto:
+                        newDoRec = True
                     if (newDoRec) and (not doRec):
                         recPath = initRec()
                         print('record started, %s'%recPath)
