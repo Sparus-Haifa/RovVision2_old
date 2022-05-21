@@ -13,6 +13,7 @@ import zmq_topics
 import config
 import shutil
 import mps
+import watchdog
 import cv2
 from select import select
 
@@ -38,6 +39,7 @@ topicsList = [ [zmq_topics.topic_thrusters_comand,   zmq_topics.topic_thrusters_
 
 subs_socks=[]
 mpsDict = {}
+watchdog = watchdog.Watchdog(topics=[zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar], monitorTime=1)
 
 for topic in topicsList:
     mpsDict[topic[0]] = mps.MPS(topic[0])
@@ -131,6 +133,8 @@ def recorder():
             topic = ret[0]
             if topic in mpsDict.keys():
                 mpsDict[topic].calcMPS()
+                watchdog.poke(topic)
+
                 if topic == zmq_topics.topic_system_state:
                     newDoRec = pickle.loads(ret[1])['record']
                     if (newDoRec) and (not doRec):
