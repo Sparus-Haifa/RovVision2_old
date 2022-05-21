@@ -18,7 +18,7 @@ fi
 
 if [ "$1" = "auto" ]; then
     echo "auto"
-    cmd="./run_onboard.sh auto && tmux att"
+    cmd="./run_remote.sh auto && tmux att"
 
 fi
 
