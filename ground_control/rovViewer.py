@@ -216,6 +216,7 @@ class rovDataHandler(Thread):
             time.sleep(0.0001)
             if not self.rawVideo:
                 if len(select([self.imgSock],[],[],0.003)[0]) > 0:
+                    # print('camera')
                     data, addr = self.imgSock.recvfrom(1024*64)
                     self.curFrameId, self.curExposure, encIm = pickle.loads(data)
                     img = cv2.imdecode(encIm, 1)
@@ -224,6 +225,7 @@ class rovDataHandler(Thread):
                     rcv_cnt += 1
 
                 if len(select([self.sonar_imgSock],[],[],0.003)[0]) > 0:
+                    # print('sonar')                    
                     data, addr = self.sonar_imgSock.recvfrom(1024*64)
                     self.sonar_curFrameId, self.sonar_curExposure, encIm = pickle.loads(data)
                     sonar_img = cv2.imdecode(encIm, 1)
@@ -265,6 +267,7 @@ class rovDataHandler(Thread):
                                 
                     # elif self.rawVideo and topic in [zmq_topics.topic_sonar]:  # zmq_topics.topic_stereo_camera
                     elif self.rawVideo and topic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
+                        print(topic)
                         self.curFrameId, imShape, self.curExposure, ts = pickle.loads(ret[1])
                         #print('<><>', self.curFrameId, imShape, ts)
                         imRaw = np.frombuffer(ret[-1], dtype='uint8').reshape(imShape)
@@ -981,6 +984,7 @@ class rovViewerWindow(Frame):
                 telemKeys = telemtry.keys()
                 if zmq_topics.topic_imu in telemKeys:
                     data = telemtry[zmq_topics.topic_imu]
+                    # print(data)
                     if self.dRtPitchVal is None:
                         self.myStyle['rtPitchtext'].config(text='%.2f°'%data['pitch'], font = ("Courier", 12))
                         if self.initRtColPlace is not None:

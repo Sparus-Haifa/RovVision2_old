@@ -13,8 +13,22 @@ import zmq_topics
 import pickle
 import zmq_wrapper as utils
 
-import recorder 
-topicsList = recorder.topicsList
+# import recorder 
+topicsList = [ [zmq_topics.topic_thrusters_comand,   zmq_topics.topic_thrusters_comand_port],
+               [zmq_topics.topic_lights,             zmq_topics.topic_controller_port],
+               [zmq_topics.topic_focus,              zmq_topics.topic_controller_port],
+               [zmq_topics.topic_depth,              zmq_topics.topic_depth_port],
+               [zmq_topics.topic_volt,               zmq_topics.topic_volt_port],
+               [zmq_topics.topic_imu,                zmq_topics.topic_imu_port],
+               [zmq_topics.topic_stereo_camera,      zmq_topics.topic_camera_port],
+               [zmq_topics.topic_system_state,       zmq_topics.topic_controller_port],
+               [zmq_topics.topic_att_hold_roll_pid,  zmq_topics.topic_att_hold_port],
+               [zmq_topics.topic_att_hold_pitch_pid, zmq_topics.topic_att_hold_port],
+               [zmq_topics.topic_att_hold_yaw_pid,   zmq_topics.topic_att_hold_port],
+               [zmq_topics.topic_depth_hold_pid,     zmq_topics.topic_depth_hold_port],
+               [zmq_topics.topic_motors_output,      zmq_topics.topic_motors_output_port],
+               [zmq_topics.topic_sonar,              zmq_topics.topic_sonar_port],
+        ]
 
 
 usageDescription = 'usage while playing: \n\t(-) press space to run frame by frame \n\t(-) press r ro run naturally, ~10Hz \n\t(-) press +/- to increase/decrease playing speed'
@@ -57,7 +71,8 @@ def CallBackFunc(event, x, y, flags, params):
          pass
 
 if showVideo:
-    winName = 'player'
+    winName = 'player_camera'
+    winName_sonar = 'player_sonar'
     winNameLowRes = 'player - low Res'
     winNameLowResSonar = 'player - low Res - sonar'
     cv2.namedWindow(winNameLowRes, 0)
@@ -92,6 +107,7 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         showIm = cv2.putText(showIm, '%04d '%(frameId), org, font,
                    fontScale, color, thickness, cv2.LINE_AA)
 
+        print("d1")
 
         if saveAvi and writer is None and im is not None:
             (h, w) = showIm.shape[:2]
@@ -114,6 +130,9 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
             if not os.path.exists(imgsPath):
                 os.system('mkdir -p %s'%imgsPath)
 
+        print("d2")
+
+
         if saveTiff:
             curImName = '%08d.tiff'%frameId
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
@@ -121,9 +140,12 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
             #curImName = '%08d.jpg'%frameId
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
             
+        print("d3")
         if showVideo:
             # print('showing')
             cv2.imshow(winName, showIm) #im[:200,:])
+        
+        print("d4")
             
 
     if imLowRes is not None:
@@ -131,6 +153,9 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         showImLow = np.copy(imLowRes)
         showImLow = cv2.putText(showImLow, '%04d '%(frameId), org, font,
                    fontScale/2, color, thickness, cv2.LINE_AA)
+
+        print("d5")
+        
 
         if saveAvi and writerLowRes is None:
             (h, w) = showImLow.shape[:2]
@@ -146,19 +171,27 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
             writerLowRes.write(showImLow)
         elif saveAvi:
             writerLowRes.write(showImLow)
+
+        print("d6")
+        
             
         if showVideo:
             if curTopic == zmq_topics.topic_stereo_camera:
                 window_topic = winNameLowRes
+                cv2.namedWindow(winName, 0)
             else:
                 window_topic = winNameLowResSonar
+                cv2.namedWindow(winName_sonar, 0)
             # zmq_topics.topic_sonar
-            cv2.namedWindow(winName, 0)
             cv2.imshow(window_topic, showImLow) #im[:200,:])
+        
+    print("d7")
 
-            
+
+    
 
     if showVideo:
+        print("wait key")
         key = cv2.waitKey(curDelay)&0xff
         if key == ord('q'):
             return False
@@ -173,10 +206,13 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         elif key == ord('r'):
             highSpeed = False
             curDelay = 1
+        print("wait key done")
+        
     else:
         pass 
         #print('current frame process %d'%frameId)
 
+    print("d8")
     return True
 
 
@@ -223,11 +259,11 @@ if __name__=='__main__':
             
             if os.path.exists(telemPath):
                 telFid = open(telemPath, 'rb')
-            if os.path.exists(vidPath) and highQuality:
+            if os.path.exists(vidPath): # and highQuality:
                 vidFid = open(vidPath, 'rb')
             if os.path.exists(vidQPath):
                 vidQFid = open(vidQPath, 'rb')
-            if os.path.exists(sonPath) and highQuality:
+            if os.path.exists(sonPath): # and highQuality:
                 sonFid = open(sonPath, 'rb')
             if os.path.exists(sonQPath):
                 sonQFid = open(sonQPath, 'rb')
@@ -258,7 +294,7 @@ if __name__=='__main__':
                                            dtype = 'uint8').reshape((imShape[0]//2, imShape[1]//2, imShape[2] ))
 
                         if hasHighRes:
-                            imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
+                            imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8') #.reshape(imShape)
                     except:
                         pass
             else:
@@ -282,16 +318,18 @@ if __name__=='__main__':
                     
 
                 curTopic = data[1][0]
-                print(curTopic)
+                # print(curTopic)
                 # if curTopic == zmq_topics.topic_sonar:
                 #     break
                 if curTopic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
+                    print(curTopic)
                     print('img')
                     file_ptr = sonFid
                     file_q_ptr = sonQFid                    
                     if curTopic == zmq_topics.topic_stereo_camera:
                         file_ptr = vidFid
                         file_q_ptr = vidQFid
+                        
                     frameId += 1
                     hasHighRes = curData[1][-1]
                     metaData = pickle.loads(curData[1][1])
@@ -310,24 +348,28 @@ if __name__=='__main__':
                     imShape  = metaData[1]
                     imgCnt  += 1
                     # load image
-                    
+                    # print('lowResEndFlag', lowResEndFlag)
                     if not lowResEndFlag:
-                        # print('trying')
-                        try:
-                            imLowRes = np.fromfile(file_q_ptr, count=imShape[1]//2*imShape[0]//2*imShape[2], 
-                                                   dtype = 'uint8').reshape((imShape[0]//2, imShape[1]//2, imShape[2] ))
-                        except Exception as e:
-                            print(e)
-                            imLowRes = None
-                            if not lowResEndFlag:
-                                print('low res video ended')
-                                lowResEndFlag = True
-                                showVideo = False
-                                continue
-                        if hasHighRes:
+                        print('trying low res', curTopic, imShape)
+                        if True: # curTopic == zmq_topics.topic_stereo_camera:
                             try:
-                                imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
+                                imLowRes = np.fromfile(file_q_ptr, count=(imShape[1]//2)*(imShape[0]//2)*imShape[2], 
+                                                    dtype = 'uint8').reshape((imShape[0]//2, imShape[1]//2, imShape[2] ))
                             except Exception as e:
+                                print(e)
+                                imLowRes = None
+                                if not lowResEndFlag:
+                                    print('low res video ended')
+                                    lowResEndFlag = True
+                                    showVideo = False
+                                    continue
+                        if hasHighRes: # and curTopic != zmq_topics.topic_stereo_camera:
+                            try:
+                                print('trying high res', curTopic, imShape)
+                                imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8') # .reshape(imShape)
+                                print('success')
+                            except Exception as e:
+                                print('high res failed for topic', curTopic )
                                 print(e)
                                 imRaw = None
                                 if not highResEndFlag:
@@ -336,9 +378,9 @@ if __name__=='__main__':
                                     continue
                         else:
                             imRaw = None
-                        
+                        print('before')
                         ret = vidProc(curTopic, imRaw, imLowRes)
-                       
+                        print('done')
                         if not ret:
                             break
     
@@ -364,7 +406,7 @@ if __name__=='__main__':
                     #recTs = data[0]
                     # if curTopic != zmq_topics.topic_sonar:
                     telData = pickle.loads(data[1][1])
-                    print('sending...')
+                    # print('sending...')
                     topicPubDict[curTopic].send_multipart([curTopic, pickle.dumps(telData)] )
                     
                     #pass
