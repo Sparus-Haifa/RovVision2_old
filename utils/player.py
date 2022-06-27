@@ -98,13 +98,13 @@ writerLowRes = None
 def vidProc(curTopic, im, imLowRes, imPub = None):
     global curDelay, highSpeed, imgsPath, writer, writerLowRes
     
-
-    if curTopic == zmq_topics.topic_stereo_camera:
-        winName_current = winName
-    else:  # zmq_topics.topic_sonar
-        winName_current = winName_sonar
-    print(winName_current)
-    cv2.namedWindow(winName_current, 0)
+    if showVideo:
+        if curTopic == zmq_topics.topic_stereo_camera:
+            winName_current = winName
+        else:  # zmq_topics.topic_sonar
+            winName_current = winName_sonar
+        print(winName_current)
+        cv2.namedWindow(winName_current, 0)
 
     if im is not None:
         im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -182,7 +182,7 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         print("d6")
         
             
-        if showVideo:
+        # if showVideo:
         #     if curTopic == zmq_topics.topic_stereo_camera:
         #         window_topic = winNameLowRes
         #         cv2.namedWindow(winName, 0)
@@ -190,7 +190,7 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         #         window_topic = winNameLowResSonar
         #         cv2.namedWindow(winName_sonar, 0)
         #     # zmq_topics.topic_sonar
-            cv2.imshow(winName_current, showImLow) #im[:200,:])
+        #   cv2.imshow(winName_current, showImLow) #im[:200,:])
         
     print("d7")
 
