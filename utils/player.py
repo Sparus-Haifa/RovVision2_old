@@ -75,7 +75,7 @@ if showVideo:
     winName_sonar = 'player_sonar'
     winNameLowRes = 'player - low Res'
     winNameLowResSonar = 'player - low Res - sonar'
-    cv2.namedWindow(winNameLowRes, 0)
+    # cv2.namedWindow(winNameLowRes, 0)
     #cv2.setMouseCallback(winName, CallBackFunc)
 
 
@@ -98,6 +98,13 @@ writerLowRes = None
 def vidProc(curTopic, im, imLowRes, imPub = None):
     global curDelay, highSpeed, imgsPath, writer, writerLowRes
     
+
+    if curTopic == zmq_topics.topic_stereo_camera:
+        winName_current = winName
+    else:  # zmq_topics.topic_sonar
+        winName_current = winName_sonar
+    print(winName_current)
+    cv2.namedWindow(winName_current, 0)
 
     if im is not None:
         im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -143,7 +150,7 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         print("d3")
         if showVideo:
             # print('showing')
-            cv2.imshow(winName, showIm) #im[:200,:])
+            cv2.imshow(winName_current, showIm) #im[:200,:])
         
         print("d4")
             
@@ -176,14 +183,14 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         
             
         if showVideo:
-            if curTopic == zmq_topics.topic_stereo_camera:
-                window_topic = winNameLowRes
-                cv2.namedWindow(winName, 0)
-            else:
-                window_topic = winNameLowResSonar
-                cv2.namedWindow(winName_sonar, 0)
-            # zmq_topics.topic_sonar
-            cv2.imshow(window_topic, showImLow) #im[:200,:])
+        #     if curTopic == zmq_topics.topic_stereo_camera:
+        #         window_topic = winNameLowRes
+        #         cv2.namedWindow(winName, 0)
+        #     else:
+        #         window_topic = winNameLowResSonar
+        #         cv2.namedWindow(winName_sonar, 0)
+        #     # zmq_topics.topic_sonar
+            cv2.imshow(winName_current, showImLow) #im[:200,:])
         
     print("d7")
 
@@ -191,8 +198,11 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
     
 
     if showVideo:
+
+        
         print("wait key")
         key = cv2.waitKey(curDelay)&0xff
+        # key = cv2.waitKey(0)
         if key == ord('q'):
             return False
         elif key == ord(' '):
