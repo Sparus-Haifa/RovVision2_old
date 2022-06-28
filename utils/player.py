@@ -182,15 +182,15 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         print("d6")
         
             
-        # if showVideo:
-        #     if curTopic == zmq_topics.topic_stereo_camera:
-        #         window_topic = winNameLowRes
-        #         cv2.namedWindow(winName, 0)
-        #     else:
-        #         window_topic = winNameLowResSonar
-        #         cv2.namedWindow(winName_sonar, 0)
-        #     # zmq_topics.topic_sonar
-        #   cv2.imshow(winName_current, showImLow) #im[:200,:])
+        if showVideo:
+            if curTopic == zmq_topics.topic_stereo_camera:
+                window_topic = winNameLowRes
+                cv2.namedWindow(winName, 0)
+            else:
+                window_topic = winNameLowResSonar
+                cv2.namedWindow(winName_sonar, 0)
+            # zmq_topics.topic_sonar
+            cv2.imshow(winName_current, showImLow) #im[:200,:])
         
     print("d7")
 
