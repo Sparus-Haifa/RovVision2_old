@@ -13,6 +13,10 @@ import zmq_topics
 import pickle
 import zmq_wrapper as utils
 
+import pandas as pd
+from datetime import datetime
+
+
 # import recorder 
 topicsList = [ [zmq_topics.topic_thrusters_comand,   zmq_topics.topic_thrusters_comand_port],
                [zmq_topics.topic_lights,             zmq_topics.topic_controller_port],
@@ -53,10 +57,46 @@ saveAvi = args.saveAvi
 highSpeed = args.freeRun
 
 
+# dataframe variables
+columns = ['topic', 'bagfile', 'label', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
+df_msgs_info_cur_bag = pd.DataFrame(columns=columns)
+
+
+
+
 print(usageDescription)
 
 if recPath == None:
     sys.exit(1)
+
+
+def create_data_frame(topic, bagfile, label, date, time, latitude, longitude, altitude, yaw, pitch, roll, velocity_x, velocity_y, velocity_z, depth):
+    global df_msgs_info_cur_bag
+    print('create_data_frame')
+    msg_info = {}
+    msg_info['topic'] =  topic
+    msg_info['bagfile'] = bagfile
+    msg_info['label'] = label
+    msg_info['date'] = date
+    msg_info['time'] = time
+    
+    nav_info = {}
+    nav_info['latitude'] = latitude
+    nav_info['longitude'] = longitude
+    nav_info['altitude'] = altitude
+    nav_info['yaw'] = yaw
+    nav_info['pitch'] = pitch
+    nav_info['roll'] = roll
+    nav_info['velocity_x'] = velocity_x
+    nav_info['velocity_y'] = velocity_y
+    nav_info['velocity_z'] = velocity_z
+    nav_info['depth'] = depth
+
+    msg_df = pd.DataFrame(msg_info, index=[0])
+    nav_df = pd.DataFrame(nav_info, index=[0])
+    # df_msgs_info_cur_bag = df_msgs_info_cur_bag.append([msg_info, nav_info], ignore_index=True)
+    new_row = pd.concat([msg_df, nav_df], axis=1, join="inner")
+    df_msgs_info_cur_bag = df_msgs_info_cur_bag.append(new_row, ignore_index=True)
 
 
 def CallBackFunc(event, x, y, flags, params):
@@ -95,8 +135,16 @@ writer = None
 writerLowRes = None
 
 
-def vidProc(curTopic, im, imLowRes, imPub = None):
+def vidProc(curTopic, im, imLowRes, timestamp):
     global curDelay, highSpeed, imgsPath, writer, writerLowRes
+
+    # print(im[:20])
+    # print(im.shape)
+    # print(im.dtype)
+
+    curImName = '%08d.tiff'%frameId
+
+    
     
     if showVideo:
         if curTopic == zmq_topics.topic_stereo_camera:
@@ -141,9 +189,11 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
 
 
         if saveTiff:
-            curImName = '%08d.tiff'%frameId
+            # curImName = '%08d.tiff'%frameId
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
+            # cv2.imwrite( os.path.join(imgsPath, curImName), im )
             cv2.imwrite( os.path.join(imgsPath, curImName), im )
+            # print(im[:20])
             #curImName = '%08d.jpg'%frameId
             #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
             
@@ -223,6 +273,21 @@ def vidProc(curTopic, im, imLowRes, imPub = None):
         #print('current frame process %d'%frameId)
 
     print("d8")
+
+    generateDataFrame = True
+    if saveTiff and generateDataFrame:
+        cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
+        cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
+        data_frame = create_data_frame(topic=curTopic, 
+            bagfile=os.path.basename(recPath), 
+            label=os.path.join(recPath, 'imgs', curImName), 
+            date=cur_date, time=cur_time,
+            latitude=None, longitude=None, altitude=None, yaw=None, pitch=None, roll=None,
+            velocity_x=None, velocity_y=None, velocity_z=None,
+            depth=None
+            )
+        
+
     return True
 
 
@@ -376,7 +441,7 @@ if __name__=='__main__':
                         if hasHighRes: # and curTopic != zmq_topics.topic_stereo_camera:
                             try:
                                 print('trying high res', curTopic, imShape)
-                                imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8') # .reshape(imShape)
+                                imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
                                 print('success')
                             except Exception as e:
                                 print('high res failed for topic', curTopic )
@@ -389,7 +454,8 @@ if __name__=='__main__':
                         else:
                             imRaw = None
                         print('before')
-                        ret = vidProc(curTopic, imRaw, imLowRes)
+                        timestamp = curData[0]
+                        ret = vidProc(curTopic, imRaw, imLowRes, timestamp)
                         print('done')
                         if not ret:
                             break
@@ -446,5 +512,8 @@ if __name__=='__main__':
             writer.release()
         if writerLowRes is not None:
             writerLowRes.release()
+               # saving csv information in the bag file directory
+        print('Saving bag file information into CSV...')
+        df_msgs_info_cur_bag.to_csv(os.path.join(recPath, 'image_nav_' + 'bagfile_name' + '.csv'), index=False)
         print("done...")            
         
