@@ -69,7 +69,8 @@ RUN pip3 install numpy
 # ENV CMAKE_MAKE_PROGRAM="make -j `nproc`"
 # RUN pip3 install --upgrade pip
 RUN python3 -V
-RUN MAKEFLAGS="-j $(nproc)" CMAKE_ARGS="-DOPENCV_ENABLE_NONFREE=ON" pip3 install -v --no-binary=opencv-contrib-python opencv-contrib-python==4.5.3.56
+RUN apt install -y libavcodec-dev libavformat-dev libavdevice-dev libavfilter-dev
+RUN MAKEFLAGS="-j $(nproc)" CMAKE_ARGS="-DOPENCV_ENABLE_NONFREE=ON -DOPENCV_FFMPEG_USE_FIND_PACKAGE=FFMPEG -DOPENCV_FFMPEG_SKIP_DOWNLOAD=on -DOPENCV_FFMPEG_SKIP_BUILD_CHECK=on" pip3 install -v --no-binary=opencv-contrib-python opencv-contrib-python==4.5.3.56
 #RUN pip3 install opencv-python 
 
 # ENV DEBIAN_FRONTEND=
@@ -178,3 +179,13 @@ RUN echo 'export ROV_TYPE=4' >> ~/.bashrc
 # RUN addgroup --gid $GROUP_ID user
 # RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
 # USER user
+
+# find pairs dependencies
+RUN pip3 install pandas
+RUN pip3 install natsort
+RUN pip3 install sklearn
+
+
+
+# moviePy depends:
+# RUN apt-get install -y imageio

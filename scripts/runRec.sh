@@ -41,6 +41,6 @@ then
 fi
 
 
-echo "tmux send-keys -t ${PANE_NAME} \"cd ../utils/ && python3 player.py -r ${1} ${SKIP} ${SAVE_AVI} ${SAVE_TIFF} ${FREE_RUN} && sleep 120 && tmux kill-session -t ${PANE_NAME}\" ENTER"
-tmux send-keys -t $PANE_NAME "cd ../utils/ && python3 player.py -r $1 $SKIP $SAVE_AVI $SAVE_TIFF $FREE_RUN && sleep 120 && tmux kill-session -t $PANE_NAME" ENTER
+echo "tmux send-keys -t ${PANE_NAME} \"cd ../utils/ && python3 player.py -r ${1} -q ${SKIP} ${SAVE_AVI} ${SAVE_TIFF} ${FREE_RUN} && sleep 120 && tmux kill-session -t ${PANE_NAME}\" ENTER"
+tmux send-keys -t $PANE_NAME "cd ../utils/ && python3 player.py -r $1 -q $SKIP $SAVE_AVI $SAVE_TIFF $FREE_RUN && sleep 120 && tmux kill-session -t $PANE_NAME" ENTER
 #tmux attach -d

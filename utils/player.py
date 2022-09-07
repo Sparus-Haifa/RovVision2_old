@@ -50,6 +50,7 @@ class Player:
         parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
         parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
         parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
+        parser.add_argument('-c', '--zeroClock', action=None, help='reset the clock to argument time')
 
         args = parser.parse_args()
 
@@ -60,6 +61,14 @@ class Player:
         self.showVideo = args.showVideo
         self.saveAvi = args.saveAvi
         self.highSpeed = args.freeRun
+        print('self.highSpeed', self.highSpeed)
+        self.zeroClock = args.zeroClock
+
+
+        # datetime.strptime(date_time_str, '%d/%m/%y %H:%M:%S')
+        # exit()
+
+
 
 
 
@@ -101,9 +110,9 @@ class Player:
 
     def create_data_frame(self, topic, bagfile, label, date, time, latitude, longitude, altitude, yaw, pitch, roll, velocity_x, velocity_y, velocity_z, depth):
         # global df_msgs_info_cur_bag
-        print('create_data_frame')
+        # print('create_data_frame')
         msg_info = {}
-        msg_info['topic'] =  topic
+        msg_info['topic'] =  topic.decode('utf-8')
         msg_info['bagfile'] = bagfile
         msg_info['label'] = label
         msg_info['date'] = date
@@ -143,6 +152,7 @@ class Player:
         
         
         if self.showVideo:
+            print('showVideo')
             if curTopic == zmq_topics.topic_stereo_camera:
                 winName_current = winName
             else:  # zmq_topics.topic_sonar
@@ -151,6 +161,7 @@ class Player:
             cv2.namedWindow(winName_current, 0)
 
         if im is not None:
+            # print('im not none')
             im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         
             showIm = np.copy(im)
@@ -158,7 +169,7 @@ class Player:
             showIm = cv2.putText(showIm, '%04d '%(self.frameId), self.org, self.font,
                     self.fontScale, self.color, self.thickness, cv2.LINE_AA)
 
-            print("d1")
+            # print("d1")
 
             if self.saveAvi and self.writer is None and im is not None:
                 (h, w) = showIm.shape[:2]
@@ -181,7 +192,7 @@ class Player:
                 if not os.path.exists(self.imgsPath):
                     os.system('mkdir -p %s'%self.imgsPath)
 
-            print("d2")
+            # print("d2")
 
 
             if self.saveTiff:
@@ -193,12 +204,12 @@ class Player:
                 #curImName = '%08d.jpg'%frameId
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
                 
-            print("d3")
+            # print("d3")
             if self.showVideo:
                 # print('showing')
                 cv2.imshow(self.winName_current, showIm) #im[:200,:])
             
-            print("d4")
+            # print("d4")
                 
 
         if imLowRes is not None:
@@ -207,7 +218,7 @@ class Player:
             showImLow = cv2.putText(showImLow, '%04d '%(self.frameId), self.org, self.font,
                     self.fontScale/2, self.color, self.thickness, cv2.LINE_AA)
 
-            print("d5")
+            # print("d5")
             
 
             if self.saveAvi and self.writerLowRes is None:
@@ -225,7 +236,7 @@ class Player:
             elif self.saveAvi:
                 self.writerLowRes.write(showImLow)
 
-            print("d6")
+            # print("d6")
             
                 
             if self.showVideo:
@@ -242,12 +253,15 @@ class Player:
                 # curImName = '%08d.tiff'%frameId
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
                 # cv2.imwrite( os.path.join(imgsPath, curImName), im )
-                cv2.imwrite( os.path.join(self.imgsPath, curImName), imLowRes )
+                # print(self.imgsPath)
+                image_path = os.path.join(self.imgsPath, curImName)
+                # print(image_path)
+                cv2.imwrite( image_path, imLowRes )
                 # print(im[:20])
                 #curImName = '%08d.jpg'%frameId
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
             
-        print("d7")
+        # print("d7")
 
 
         
@@ -255,7 +269,7 @@ class Player:
         if self.showVideo:
 
             
-            print("wait key")
+            # print("wait key")
             key = cv2.waitKey(curDelay)&0xff
             # key = cv2.waitKey(0)
             if key == ord('q'):
@@ -271,13 +285,13 @@ class Player:
             elif key == ord('r'):
                 self.highSpeed = False
                 self.curDelay = 1
-            print("wait key done")
+            # print("wait key done")
             
         else:
             pass 
             #print('current frame process %d'%frameId)
 
-        print("d8")
+        # print("d8")
 
         generateDataFrame = True
         if self.saveTiff and generateDataFrame:
@@ -400,8 +414,8 @@ class Player:
                     # if curTopic == zmq_topics.topic_sonar:
                     #     break
                     if curTopic in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
-                        print(curTopic)
-                        print('img')
+                        # print(curTopic)
+                        # print('img')
                         file_ptr = self.sonFid
                         file_q_ptr = self.sonQFid                    
                         if curTopic == zmq_topics.topic_stereo_camera:
@@ -428,7 +442,7 @@ class Player:
                         # load image
                         # print('lowResEndFlag', lowResEndFlag)
                         if not self.lowResEndFlag:
-                            print('trying low res', curTopic, imShape)
+                            # print('trying low res', curTopic, imShape)
                             if True: # curTopic == zmq_topics.topic_stereo_camera:
                                 try:
                                     imLowRes = np.fromfile(file_q_ptr, count=(imShape[1]//2)*(imShape[0]//2)*imShape[2], 
@@ -443,9 +457,9 @@ class Player:
                                         continue
                             if hasHighRes: # and curTopic != zmq_topics.topic_stereo_camera:
                                 try:
-                                    print('trying high res', curTopic, imShape)
+                                    # print('trying high res', curTopic, imShape)
                                     imRaw = np.fromfile(file_ptr, count=imShape[1]*imShape[0]*imShape[2], dtype = 'uint8').reshape(imShape)
-                                    print('success')
+                                    # print('success')
                                 except Exception as e:
                                     print('high res failed for topic', curTopic )
                                     print(e)
@@ -456,10 +470,10 @@ class Player:
                                         continue
                             else:
                                 imRaw = None
-                            print('before')
+                            # print('before')
                             timestamp = curData[0]
                             ret = self.vidProc(curTopic, imRaw, imLowRes, timestamp)
-                            print('done')
+                            # print('done')
                             if not ret:
                                 break
         
@@ -516,8 +530,10 @@ class Player:
             if self.writerLowRes is not None:
                 self.writerLowRes.release()
                 # saving csv information in the bag file directory
+            csv_path = os.path.join(self.recPath, 'image_nav_' + 'bagfile_name' + '.csv')
             print('Saving bag file information into CSV...')
-            self.df_msgs_info_cur_bag.to_csv(os.path.join(self.recPath, 'image_nav_' + 'bagfile_name' + '.csv'), index=False)
+            print(csv_path)
+            self.df_msgs_info_cur_bag.to_csv(csv_path, index=False)
             print("done...")            
             
 

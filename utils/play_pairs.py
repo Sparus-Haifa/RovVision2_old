@@ -13,20 +13,11 @@ usageDescription = 'finding pairs'
 
 parser = argparse.ArgumentParser(description='find pairs parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-i', '--csvPath', default=None, help=' path to input csv file ')
-parser.add_argument('-s', '--savePairs', action='store_true', help='save tiffs files to record folder')
-
-
-
 args = parser.parse_args()
 
 
 # main_path = r'/workspaces/RovVision2_old'
 main_path = args.csvPath
-
-save_pairs = args.savePairs
-# print(save_pairs)
-# exit()
-
 
 FLS_window_name = 'FLS_image'
 FLC_window_name = 'FLC_image'
@@ -85,84 +76,94 @@ csv_path = os.path.join(main_path, filename)
 # data frame for the CSV
 df = pd.read_csv(csv_path)
 # init Dataframe for pairs data set
-df_pairs = pd.DataFrame(columns=['FLC', 'FLS'])
+
+# df_pairs = pd.DataFrame(columns=['FLC', 'FLS'])
+# print(df_pairs)
 
 # list of of bag files
-bags_list = list(set(df['bagfile'].to_list()))
-print(bags_list)
+# bags_list = list(set(df['bagfile'].to_list()))
+# print(bags_list)
 
 
 # iterating over the bags files
-for bag_ii in bags_list:
+# for bag_ii in bags_list:
     # print(bag_ii)
     # df slicing according current bagfile
-    df_tmp = df.loc[df['bagfile'] == bag_ii]
-    # indices of FLC images
-    FLC_idx = df_tmp.index[df_tmp['topic'] == 'topic_sonar'].to_list()
-    # print('FLC index')
-    # print(FLC_idx)
-    # indices of FLS color 2 (jet) images
-    FLS_idx = df_tmp.index[df_tmp['topic'] == 'topic_stereo_camera'].to_list()
 
-    # following the smaller amount of files
-    if len(FLS_idx) < len(FLC_idx):
-        FLC_idx = [find_closest_index(element, FLC_idx) for element in FLS_idx]
-    else:
-        FLS_idx = [find_closest_index(element, FLS_idx) for element in FLC_idx]
+    # df_tmp = df.loc[df['bagfile'] == bag_ii]
 
-    df_FLC = df_tmp.loc[FLC_idx]['label']
-    df_FLS = df_tmp.loc[FLS_idx]['label']
+    # # indices of FLC images
+    # FLC_idx = df_tmp.index[df_tmp['topic'] == 'topic_sonar'].to_list()
+    # # print('FLC index')
+    # # print(FLC_idx)
+    # # indices of FLS color 2 (jet) images
+    # FLS_idx = df_tmp.index[df_tmp['topic'] == 'topic_stereo_camera'].to_list()
 
-    # changing paths to local main path
+    # # following the smaller amount of files
+    # if len(FLS_idx) < len(FLC_idx):
+    #     FLC_idx = [find_closest_index(element, FLC_idx) for element in FLS_idx]
+    # else:
+    #     FLS_idx = [find_closest_index(element, FLS_idx) for element in FLC_idx]
+
+    # df_FLC = df_tmp.loc[FLC_idx]['label']
+    # df_FLS = df_tmp.loc[FLS_idx]['label']
+
+    # # changing paths to local main path
     # df_FLC = df_FLC.apply(lambda x: change_main_path(main_path=main_path, path_string=x, keep_path_locations=-3))
     # df_FLS = df_FLS.apply(lambda x: change_main_path(main_path=main_path, path_string=x, keep_path_locations=-3))
 
-    # appending pairs datafame
-    df_pairs = pd.concat([df_pairs, pd.DataFrame({'FLC': df_FLC.to_list(),
-                                                  'FLS': df_FLS.to_list()})], ignore_index=True)
+    # # appending pairs datafame
+    # df_pairs = pd.concat([df_pairs, pd.DataFrame({'FLC': df_FLC.to_list(),
+    #                                               'FLS': df_FLS.to_list()})], ignore_index=True)
 
-    print(df_pairs)
-    for index, row in df_pairs.iterrows():
-        print(row['FLC'], row['FLS'])
-        flc, fls = (row['FLC'], row['FLS'])
-        # print(row)
-        # print(flc)
+    # print(df_pairs)
+# for index, row in df.iterrows():
+index = 0
+# for index in
+while 0 <= index <= len(df): 
+    row = df.iloc[index]
+    print(row['FLC'], row['FLS'])
+    flc, fls = (row['FLC'], row['FLS'])
+    # print(row)
+    flc_img = cv2.imread(flc)
+    cv2.imshow('FLC_window_name', flc_img)
 
-        flc_img = cv2.imread(flc)
-        fls_img = cv2.imread(fls)
-        try:
-            cv2.imshow('FLC_window_name', flc_img)
-            cv2.imshow('FLS_window_name', fls_img)
-        except :
-            continue
+    fls_img = cv2.imread(fls)
+    cv2.imshow('FLS_window_name', fls_img)
 
 
+    print("wait key")
+    key = cv2.waitKey(curDelay)&0xff
+    # key = cv2.waitKey(0)
+    if key == ord('q') or key == 27:
+        print('quit')
+        break
+    elif key == ord(' '):
+        print('space')
+        curDelay = 0
+    elif key == ord('+'):
+        print('speed up')
+        highSpeed = True
+        curDelay = max(1, curDelay-5 )
+    elif key == ord('-'):
+        print('speed down')
+        highSpeed = True
+        curDelay = min(1000, curDelay+5 )
+    elif key == ord('r'):
+        print('free run')
+        highSpeed = False
+        curDelay = 1
+    elif key == ord('r'):
+        print('free run')
+        highSpeed = False
+        curDelay = 1
+    elif key == 81: #left
+        print('left')
+        index-=2
+    else:
+        print('key pressed ', key)
 
-        print("wait key")
-        key = cv2.waitKey(curDelay)&0xff
-        # key = cv2.waitKey(0)
-        if key == ord('q'):
-            print('quit')
-            break
-        elif key == ord(' '):
-            print('space')
-            curDelay = 0
-        elif key == ord('+'):
-            print('speed up')
-            highSpeed = True
-            curDelay = max(1, curDelay-5 )
-        elif key == ord('-'):
-            print('speed down')
-            highSpeed = True
-            curDelay = min(1000, curDelay+5 )
-        elif key == ord('r'):
-            print('free run')
-            highSpeed = False
-            curDelay = 1
-        elif key == ord('r'):
-            print('free run')
-            highSpeed = False
-            curDelay = 1
+    index +=1
 
 
         
@@ -170,23 +171,24 @@ for bag_ii in bags_list:
 
 cv2.destroyAllWindows() 
 
+# # split to train - 0.6, validation - 0.1, test - 0.3 sets
+# df_train_set, df_test_set = train_test_split(df_pairs, test_size=0.3)
+# df_train_set, df_validation_set = train_test_split(df_train_set, test_size=10 / 70)
 
-if save_pairs:
+# print('Dataset size: ', df_pairs.shape[0])
+# print('Train set size: ', df_train_set.shape[0], f'({df_train_set.shape[0]/df_pairs.shape[0]:.0%})')
+# print('Validation set size: ', df_validation_set.shape[0], f'({df_validation_set.shape[0]/df_pairs.shape[0]:.0%})')
+# print('Test set size: ', df_test_set.shape[0], f'({df_test_set.shape[0]/df_pairs.shape[0]:.0%})')
 
-    # split to train - 0.6, validation - 0.1, test - 0.3 sets
-    df_train_set, df_test_set = train_test_split(df_pairs, test_size=0.3)
-    df_train_set, df_validation_set = train_test_split(df_train_set, test_size=10 / 70)
+# # saving csv files
+# df_train_set.to_csv(os.path.join(main_path, 'train_set.csv'), header=False)
+# df_validation_set.to_csv(os.path.join(main_path, 'validation_set.csv'), header=False)
+# df_test_set.to_csv(os.path.join(main_path, 'test_set.csv'), header=False)
 
-    print('Dataset size: ', df_pairs.shape[0])
-    print('Train set size: ', df_train_set.shape[0], f'({df_train_set.shape[0]/df_pairs.shape[0]:.0%})')
-    print('Validation set size: ', df_validation_set.shape[0], f'({df_validation_set.shape[0]/df_pairs.shape[0]:.0%})')
-    print('Test set size: ', df_test_set.shape[0], f'({df_test_set.shape[0]/df_pairs.shape[0]:.0%})')
 
-    # saving csv files
-    df_train_set.to_csv(os.path.join(main_path, 'train_set.csv'), header=True)
-    df_validation_set.to_csv(os.path.join(main_path, 'validation_set.csv'), header=True)
-    df_test_set.to_csv(os.path.join(main_path, 'test_set.csv'), header=True)
-    df_pairs.to_csv(os.path.join(main_path, 'pairs.csv'), header=True)
+
+
+
 
 # flc_files = os.listdir(flc_path)
 # flc_files_idx = [csv_name_list.index(element) for element in flc_files]
