@@ -6,11 +6,16 @@ topic_thrusters_comand=b'thruster_cmd'
 #opration modes
 topic_system_state=b'system_state'
 
-topic_controller_port=topic_thrusters_comand_port=7788
+topic_controller_port = topic_thrusters_comand_port=7788
 thrusters_sink_port = 7787
 topic_lights=b'topic_lights'
 topic_focus=b'topic_set_focus_state'
 topic_tracker_cmd=b'topic_tracker_start_stop_cmd'
+
+
+
+topic_check_thrusters_comand=b'thruster_check_cmd'
+topic_check_thrusters_comand_port=9005
 
 topic_autoFocus_port = 7790
 topic_autoFocus = b'autoFocus'
@@ -46,6 +51,9 @@ topic_gui_inc_exp          = b'inc_exposureCmd'
 topic_gui_dec_exp          = b'dec_exposureCmd'
 topic_gui_exposureVal      = b'exposureValue'
 topic_gui_toggle_auto_gain = b'auto_gainCmd'
+
+topic_gui_update_pids      = b'updatePIDS'
+
 topic_gui_port = 8900
 
 topic_motors_output = b'motors_output'

@@ -51,6 +51,7 @@ parser.add_argument('-r', '--rawVideo', action='store_true', help='Recieve raw v
 parser.add_argument('-s', '--sim', action='store_true', help='Simulation')
 args = parser.parse_args()
 
+
 '''
 tm = time.gmtime()
 filename = "logs/gui_{}_{}_{}__{}_{}_{}.log".format(
@@ -61,6 +62,7 @@ log_file = open(filename, "a")
 
 if args.sim:
     rovType = -1
+    isSim = True 
 else:
     rovType = int(os.environ.get('ROV_TYPE','1'))
 
@@ -98,6 +100,9 @@ class CycArr():
 
 
 from threading import Thread
+
+rovGuiCommandPublisher = utils.publisher(zmq_topics.topic_gui_port)
+
 class rovDataHandler(Thread):
     def __init__(self, rovViewer):
         super().__init__()
@@ -237,10 +242,11 @@ class rovDataHandler(Thread):
             while True:
                 
                 time.sleep(0.0001)
-                socks = zmq.select(self.subs_socks,[],[],0.005)[0]
+                socks = zmq.select(self.subs_socks,[],[],0.001)[0]
                 if len(socks)==0: #flush msg buffer
                     break
                 for sock in socks:
+
                     ret = sock.recv_multipart()
                     topic = ret[0]
                     if topic not in [zmq_topics.topic_stereo_camera, zmq_topics.topic_sonar]:
@@ -330,9 +336,349 @@ attHoldMsg   = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
 depthHoldMsg = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
+
+class checkListForm(object):
+    def __init__(self,master):
+        
+        #TODO: kill hw_gate.py on ROV
+        self.pub_sock = utils.publisher(zmq_topics.topic_check_thrusters_comand_port)
+        self.rovGuiCommandPublisher = rovGuiCommandPublisher
+        
+        top=self.top = Toplevel(master)
+        
+        top.protocol("WM_DELETE_WINDOW", self.cleanup)
+        
+        top.attributes('-topmost', True)
+        top.title("ROV Check List")
+        #top.geometry('880x700')
+        
+        path = "frame-numberings.jpg"
+        self.img = Image.open(path)
+        width = 400
+        height = 350
+        rowHeight = 29
+        try: # new PIL version
+            self.img = ImageTk.PhotoImage(self.img.resize((width, height), Image.Dither.NONE))
+        except:
+            self.img = ImageTk.PhotoImage(self.img.resize((width, height), Image.NONE))
+        
+        lbl = Label(top, image=self.img, width=width, height=height, borderwidth=2,
+                    highlightbackground="white")
+        lbl.image = self.img
+        lbl.place(x=430,y=250)
+        
+        curRow = 1
+        self.l = Label(top,text="CAUTION! - motors are running during test")
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        curRow += 1
+        
+        headreFontSize = 11
+        
+        
+        self.l = Label(top,text="Camera Test")
+        self.l.configure(font=("Helvetica", headreFontSize, "bold"))
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        
+        curRow += 1
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Is live image?")
+        self.Check.grid(column=1, row=curRow, sticky='w')
+        
+        curRow += 1
+        
+        self.l = Label(top,text="Set exposure to manual")
+        self.l.grid(column=1, row=curRow, columnspan=2, sticky='w')  #.place(x=1, y=1)
+        
+        curRow += 1
+        
+        self.l = Label(top,text="Set exposure to 1")
+        self.l.grid(column=1, row=curRow, columnspan=1, sticky='w')  #.place(x=1, y=1)
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Dark image OK")
+        self.Check.grid(column=2, columnspan=2, row=curRow, sticky='w')
+        
+        curRow += 1
+        
+        self.l = Label(top,text="Set exposure to 99")
+        self.l.grid(column=1, row=curRow, columnspan=1, sticky='w')  #.place(x=1, y=1)
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Bright image OK")
+        self.Check.grid(column=2, columnspan=2, row=curRow, sticky='w')
+        
+        curRow += 1
+        
+        self.l = Label(top,text="Set auto exposure")
+        self.l.grid(column=1, row=curRow, columnspan=1, sticky='w')  #.place(x=1, y=1)
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="auto exposure OK")
+        self.Check.grid(column=2, columnspan=2, row=curRow, sticky='w')
+        
+        curRow += 1
+        
+        self.l = Label(top,text="Inertial Test")
+        self.l.configure(font=("Helvetica", headreFontSize, "bold"))
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        
+        curRow += 1
+        
+        self.l = Label(top,text="IMU test - pitch: nose down/up\n\troll: tilt right/left:")
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        
+        
+        curRow += 1
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="IMU OK")
+        self.Check.grid(column=2, columnspan=2, row=curRow, sticky='w')
+        
+        curRow += 1
+
+        self.l = Label(top,text="IMU test - check mag. 90-90 (yawing):")
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        
+        
+        curRow += 1
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Mag. OK")
+        self.Check.grid(column=2, columnspan=2, row=curRow, sticky='w')
+        
+        curRow += 1
+        #top.grid_rowconfigure(curRow, minsize=rowHeight)
+        #curRow += 1
+        
+        self.l = Label(top,text="Motors Test")
+        self.l.configure(font=("Helvetica", headreFontSize, "bold"))
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        
+        curRow += 1
+
+        '''
+        self.motorsTest=Button(top, text='motor Test', command=lambda motId=-1: self.runMotorTest(motId) )
+        self.motorsTest.grid(column=1, row=curRow, sticky='w')
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="motors OK")
+        self.Check.grid(column=2, row=curRow, sticky='w')
+        
+        curRow +=1
+        colIxd = 1
+        
+        
+        for motIdx in range(0,8):
+            if motIdx%2 == 0:
+                curRow += 1
+                colIxd = 1
+        
+            #self.tmpBtn = Button(top, text='M-%d'%(motIdx+1), command=lambda curMotId=motIdx+1: self.runMotorTest(curMotId) )
+            self.tmpBtn = Scale(top, from_=1400, to=1600, tickinterval=10, orient=HORIZONTAL, showvalue=False) #, command=lambda curMotId=motIdx+1: self.runMotorTest(curMotId))
+            self.tmpBtn.set(1500)
+            self.tmpBtn.coords(value=None)
+            self.tmpBtn.grid(column=colIxd, row=curRow, sticky='w')
+            colIxd += 1
+            
+            self.checkVar = IntVar()
+            self.checkVar.set(1)
+            
+            self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="M%d-OK"%(motIdx+1) )
+            self.Check.grid(column=colIxd, row=curRow, sticky='w')
+            colIxd += 1
+        '''  
+        self.mototValues = []
+        for motIdx in range(0,8):
+             if motIdx%4 == 0:
+                 curRow += 2
+                 colIxd = 1
+             current_value = DoubleVar()
+             #self.tmpBtn = Button(top, text='M-%d'%(motIdx+1), command=lambda curMotId=motIdx+1: self.runMotorTest(curMotId) )
+             tmpBtn = Scale(top, from_=1350, 
+                                      to=1650, 
+                                      orient=VERTICAL, 
+                                      label="M-%d"%(motIdx+1), 
+                                      showvalue=True, 
+                                      resolution=5,
+                                      variable=current_value,
+                                      command = self.runMotorTest )
+                                      #command=lambda curMotId=motIdx+1, B=0: self.runMotorTest(B, curMotId))
+             tmpBtn.set(1500)
+             self.mototValues.append(current_value)
+
+             tmpBtn.grid(column=colIxd, row=curRow, sticky='w')
+             #colIxd += 1
+             
+             self.checkVar = IntVar()
+             self.checkVar.set(1)
+             
+             self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="M%d-OK"%(motIdx+1) )
+             self.Check.grid(column=colIxd, row=curRow+1, sticky='w')
+             colIxd += 1
+        
+        curRow += 1
+        top.grid_rowconfigure(curRow, minsize=rowHeight)
+        curRow += 1
+        
+        self.l = Label(top,text="Peripherals Test")
+        
+        self.l.configure(font=("Helvetica", headreFontSize, "bold"))
+        self.l.grid(column=1, row=curRow, columnspan=4, sticky='w')  #.place(x=1, y=1)
+        curRow += 1
+        
+        self.servoTest=Button(top, text='Focus test', command=self.runFocusTest)
+        self.servoTest.grid(column=1, row=curRow, sticky='w')
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Servo OK")
+        self.Check.grid(column=2, row=curRow, sticky='w')
+        
+        
+        curRow +=1
+        self.ledsTest = Button(top, text='Leds test', command=self.runLedsTest)
+        self.ledsTest.grid(column=1, row=curRow, sticky='w')
+        
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Leds OK")
+        self.Check.grid(column=2, row=curRow, sticky='w')
+        
+        curRow +=1
+       
+        self.checkVar = IntVar()
+        self.checkVar.set(1)
+        
+        self.Check = Checkbutton(top, variable=self.checkVar, onvalue=0, offvalue=1, text="Check disk space")
+        self.Check.grid(column=1, row=curRow, sticky='w')
+        
+        curRow +=1
+        
+        top.grid_rowconfigure(curRow, minsize=rowHeight//2)
+        curRow += 1
+        
+        self.doneBtn=Button(top,text='Done',command=self.cleanup)
+        self.doneBtn.grid(column=1, row=curRow, sticky='w')
+        
+        
+        #print("calculate form height: %d"%(curRow*rowHeight))
+        top.geometry('860x%d'%(curRow*rowHeight) )
+        
+        self.motorsTestSent = False
+        self.motorsTestSentTic = time.time()
+        
+        self.startFocusTest = False
+        self.focusVal = 850
+        self.focusSendTic = time.time()
+        
+        self.main()
+        
+        
+    def runMotorTest(self, val):
+        #TODO: call esp test function on ROV
+        
+        pwms = []
+        for X in self.mototValues: 
+            pwms.append( int( X.get() ) )
+
+        #print('-->', pwms)
+        if any((True for x in pwms if x != 1500)):
+            tic = time.time()
+            pwms = (1500-np.array(pwms))/800
+            print('-->', pwms)
+            pwms = np.clip(pwms,-1,1)
+            #print('-->', pwms)
+            self.pub_sock.send_multipart([zmq_topics.topic_check_thrusters_comand, pickle.dumps((tic,list(pwms)))])
+            self.motorsTestSent = True
+            self.motorsTestSentTic = time.time()
+    
+    def sendFocusVal(self, val):
+        print('new focus PWM: %d'%val)
+        data = pickle.dumps(val, protocol=3)
+        self.rovGuiCommandPublisher.send_multipart( [zmq_topics.topic_gui_focus_controller, data])
+        self.focusSendTic = time.time()
+
+            
+    def runFocusTest(self):
+        
+        ## send focus command
+        self.startFocusTest = not self.startFocusTest
+        if self.startFocusTest:
+            self.focusVal = 850
+           
+        
+    def runLedsTest(self):
+        #TODO: call esp test function on ROV
+        print("TBD: Leds test...")
+    
+    def main(self):
+        
+        if self.motorsTestSent and (time.time() - self.motorsTestSentTic) > 3: 
+            pwms = [1500]*8
+            print('-stop motors->', pwms)
+            tic = time.time()
+            pwms = (1500-np.array(pwms))/800
+            #print('-->', pwms)
+            pwms = np.clip(pwms,-1,1)
+            #print('-->', pwms)
+            self.pub_sock.send_multipart([zmq_topics.topic_check_thrusters_comand, pickle.dumps((tic,list(pwms)))])
+            self.motorsTestSent = False
+            self.motorsTestSentTic = time.time()
+            # update GUI 
+            for X in self.mototValues:
+                X.set(1500)
+                
+        if self.startFocusTest and (time.time() - self.focusSendTic) > 0.5:
+            self.sendFocusVal(self.focusVal)
+            self.focusVal += 100
+            if self.focusVal >= 2250:
+                self.startFocusTest = False
+                
+            
+                
+        self.top.after(25, self.main)
+        
+    def cleanup(self):
+        try:
+            import tkcap
+            cap = tkcap.CAP(self.top)     # master is an instance of tkinter.Tk
+
+            picturePath = os.path.join(os.getenv("HOME"), "Pictures/checkList")
+            if not os.path.exists(picturePath):
+                os.system('mkdir -p %s'%picturePath)
+            imgName = time.strftime("CL_%Y%m%d_%H%M%S.png", time.localtime())
+            imgPath = os.path.join(picturePath, imgName)
+            #region = cap.get_region()
+            cap.capture(imgPath)       # Capture and Save the screenshot of the tkiner window
+
+        except:
+            print('To record the check list - please install the following pkgs: \npip install tkcap \nsudo apt-get install scrot')
+        print("clean form...")
+        self.pub_sock.close()
+        self.top.destroy()
+
+
+
+
 class recRunProp(object):
     def __init__(self,master):
         top=self.top = Toplevel(master)
+        
         self.l = Label(top,text="Run record ")
         self.l.pack()
         
@@ -455,7 +801,7 @@ class rovViewerWindow(Frame):
         self.set_style()
         
         self.updateGuiData()
-        self.rovGuiCommandPublisher = utils.publisher(zmq_topics.topic_gui_port)
+        self.rovGuiCommandPublisher = rovGuiCommandPublisher #utils.publisher(zmq_topics.topic_gui_port)
         self.armClicked = False
         self.recClicked = False
         self.attMessage = {'dDepth':0.0, 'dPitch': 0.0, 'dYaw':0.0}
@@ -585,51 +931,30 @@ class rovViewerWindow(Frame):
         ## double click -> "<Double-1>"
         #self.myStyle['disp_image'].bind("<Button-2>", self.image_right_clicked)
         #self.myStyle['disp_image'].bind("<Button-3>", self.image_right_clicked)
-
-        self.parent.bind("<Left>", self.left_click_func)
+        
+        '''
+        self.parent.bind("<Left>",  self.left_click_func)
         self.parent.bind("<Right>", self.right_click_func)
-        self.parent.bind("<Up>", self.up_click_func)
-        self.parent.bind("<Down>", self.down_click_func)
+        self.parent.bind("<Up>",    self.up_click_func)
+        self.parent.bind("<Down>",  self.down_click_func)
         self.parent.bind("<Prior>", self.page_up_click_func)
-        self.parent.bind("<Next>", self.page_down_click_func)
+        self.parent.bind("<Next>",  self.page_down_click_func)
         self.parent.bind("<Key-7>", self.turn_left_click_func)
         self.parent.bind("<Key-9>", self.turn_right_click_func)
+        '''
 
-        self.parent.bind("<Key-a>", self.left_click_func)
-        self.parent.bind("<Key-d>", self.right_click_func)
-        self.parent.bind("<Key-w>", self.up_click_func)
-        self.parent.bind("<Key-s>", self.down_click_func)
-        self.parent.bind("<Key-r>", self.page_up_click_func)
-        self.parent.bind("<Key-f>", self.page_down_click_func)
-        self.parent.bind("<Key-q>", self.turn_left_click_func)
-        self.parent.bind("<Key-e>", self.turn_right_click_func)
+        self.parent.bind("<Key-a>", self.goLeft)
+        self.parent.bind("<Key-d>", self.goRight)
+        self.parent.bind("<Key-w>", self.goForward)
+        self.parent.bind("<Key-s>", self.neutralCmd)
+        self.parent.bind("<Key-x>", self.goBackwards)
+        self.parent.bind("<Key-e>", self.yawRight)
+        self.parent.bind("<Key-q>", self.yawLeft)
+        self.parent.bind("<Key-c>", self.goDeeper)
+        self.parent.bind("<Key-z>", self.goUpper)
         
-        self.parent.bind("<F11>", self.fullVideoScreenEvent)
+        self.parent.bind("<F11>",   self.fullVideoScreenEvent)
 
-        
-    def page_up_click_func(self, event):
-        self.go_up()
-
-    def page_down_click_func(self, event):
-        self.go_down()
-
-    def turn_left_click_func(self, event):
-        self.turn_left()
-
-    def turn_right_click_func(self, event):
-        self.turn_right()
-
-    def left_click_func(self, event):
-        print('left')
-
-    def right_click_func(self, event):
-        self.go_right()
-
-    def up_click_func(self, event):
-        self.go_forwards()
-
-    def down_click_func(self, event):
-        self.go_backwards()
 
     def updatePIds(self, pids):
         self.myStyle["K_textbox"].delete(0, END)
@@ -883,8 +1208,11 @@ class rovViewerWindow(Frame):
     def make_image(self, name, col, row, x, y, char_width, char_height, update_function):
         path = "rov.jpg"
         self.img = Image.open(path)
-        self.img = self.img.resize((char_width, char_height))
-        self.img = ImageTk.PhotoImage(self.img.resize((char_width, char_height), Image.NONE))
+        try: # new PIL version
+            self.img = ImageTk.PhotoImage(self.img.resize((char_width, char_height), Image.Dither.NONE))
+        except:
+            self.img = ImageTk.PhotoImage(self.img.resize((char_width, char_height), Image.NONE))
+
         lbl = Label(self.parent, image=self.img, width=char_width, height=char_height, borderwidth=2,
                     highlightbackground="white")
         lbl.image = self.img
@@ -939,31 +1267,43 @@ class rovViewerWindow(Frame):
     def autoGain(self):
         print('auto gain command')
         self.rovGuiCommandPublisher.send_multipart( [zmq_topics.topic_gui_toggle_auto_gain, pickle.dumps(b'', protocol=3) ])
-        
-
-    def turn_right(self):
+    
+    def goLeft(self):
+        #TODO: send left movement command
         pass
 
-    def turn_left(self):
+    def goRight(self):
+        #TODO: send right movement command
         pass
-
-    def go_up(self):
+    
+    def goForward(self):
+        #TODO: send forward movement command
         pass
-
-    def go_down(self):
+    
+    def neutralCmd(self):
+        #TODO: send no movement command (sticks at middle)
         pass
-
-    def go_left(self):
+    
+    def goBackwards(self):
+        #TODO: send backwards movement command
         pass
-
-    def go_right(self):
+    
+    def yawRight(self):
+        #TODO: send yaw-right movement command
         pass
-
-    def go_forwards(self):
+    
+    def yawLeft(self):
+        #TODO: send yaw-left movement command
         pass
-
-    def go_backwards(self):
+    
+    def goDeeper(self):
+        #TODO: send deeper movement command
         pass
+    
+    def goUpper(self):
+        #TODO: send upper movement command
+        pass
+    
 
     def led_off(self):
         pass
@@ -1506,7 +1846,9 @@ class rovViewerWindow(Frame):
         self.create_button("rebootRemote", "reboot ROV", btnCol, row_btn_idx, self.rebootRemote)
         
         btnCol += 2
-        row_btn_idx = 7
+        row_btn_idx = 6
+        self.create_button("runCheckList", "Check List", btnCol, row_btn_idx, self.runCheckList)
+        row_btn_idx += 1
         self.create_button("runRecords", "Run record", btnCol, row_btn_idx, self.runRecord)
         row_btn_idx += 1
         self.create_button("getRecords", "Fetch Recs", btnCol, row_btn_idx, self.fetchRecords)
@@ -1527,7 +1869,7 @@ class rovViewerWindow(Frame):
         self.create_text_box(name="Kd", label_text="kD:", display_text="", n_col=btnCol , n_row=row_btn_idx, textbox_width=9)
         
         
-        if 0:
+        if 0: ###
             ### show manual controls
             control_start_col = 6#12
             manualControlOffsetRow = 3
@@ -1612,7 +1954,14 @@ class rovViewerWindow(Frame):
                                                                                             self.w.saveTiffVar.get(),
                                                                                             self.w.freeRunVar.get() ))
          
-
+    
+    def runCheckList(self):
+        self.w = checkListForm(self.master)
+        
+        self.myStyle["runCheckList_button"]['state']=DISABLED
+        self.master.wait_window(self.w.top)
+        self.myStyle["runCheckList_button"]['state']=NORMAL
+        
         
     def fetchRecords(self):
         os.system('cd ../scripts && ./recSync.sh && sleep 3')
@@ -1644,8 +1993,9 @@ class rovViewerWindow(Frame):
         dkey = None
         for key in self.controllerChbx:
             if self.controllerChbx[key].get() == 0:
-                dkey = key
-                print(key)
+                if key != 'thrusters':
+                    dkey = key
+                    print(key)
         
         if dkey is not None:
             with open("../config_pid.json") as fid:
@@ -1656,13 +2006,21 @@ class rovViewerWindow(Frame):
                 data['config_pid'][0][dkey+'_pid']['P'] = float(self.myStyle["Kp_textbox"].get())
                 data['config_pid'][0][dkey+'_pid']['I'] = float(self.myStyle["Ki_textbox"].get())
                 data['config_pid'][0][dkey+'_pid']['D'] = float(self.myStyle["Kd_textbox"].get())
+               
+                if not isSim:
+                    with open("../config_pid.json", 'w') as fid:
+                        json.dump(data, fid, indent=4)
                 
-                with open("../config_pid.json", 'w') as fid:
-                    json.dump(data, fid, indent=4)
                 
-                self.cmdDepthHold()
-                self.cmdAttHold()
-                os.system("cd ../scripts && ./updateRemotePIDs.sh")
+                print('--update PID-->', dkey)
+                msg = {'pluginUpdate':dkey, 'data':data}
+                msg = pickle.dumps(msg, protocol=3)
+                self.rovGuiCommandPublisher.send_multipart( [zmq_topics.topic_gui_update_pids, msg])
+                
+                #self.cmdDepthHold()
+                #self.cmdAttHold()
+                #os.system("cd ../scripts && ./updateRemotePIDs.sh")
+                
             except:
                 import traceback
                 traceback.print_exc()
@@ -1730,4 +2088,6 @@ if __name__=='__main__':
         traceback.print_exc()
     finally:
         guiInstance.quit()
+        if args.sim:
+            os.system('tmux kill-session -t sim')
         

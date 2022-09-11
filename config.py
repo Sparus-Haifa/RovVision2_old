@@ -24,6 +24,9 @@ groundIp = "192.168.3.11"
 udpPort = 33221
 sonar_udpPort = 33222
 
+toROVudpPort   = fromGroundUdpPort = 55661
+fromROVudpPort = toGroundUdpPort   = 55662
+
 
 #gstreamer
 gst_ports=[6760,6761]

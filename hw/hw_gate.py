@@ -17,14 +17,24 @@ import config
 
 from select import select
 
+import argparse
+
+parser = argparse.ArgumentParser(description='UDP gate: zmq pub-sub to/from UDP', formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('-e', '--emulator', action='store_true', help='run without the real HW, currntly - connect any ttyUSB to computer')
+args = parser.parse_args()
+
 
 current_command=[0 for _ in range(8)] # 8 thrusters
 keep_running=True
 
 subs_socks=[]
 subs_socks.append(utils.subscribe([zmq_topics.topic_thrusters_comand],zmq_topics.topic_thrusters_comand_port))
+subs_socks.append(utils.subscribe([zmq_topics.topic_check_thrusters_comand],zmq_topics.topic_check_thrusters_comand_port))
 
-ser = serial.Serial(detect_usb.devmap['ESC_USB'], 115200)
+if not args.emulator:
+    ser = serial.Serial(detect_usb.devmap['ESC_USB'], 115200)
+else:
+    ser = serial.Serial('/dev/ttyUSB0', 115200)
 
 rov_type = int(os.environ.get('ROV_TYPE','1'))
 if rov_type == 4:
@@ -168,6 +178,8 @@ def mainHwGate():
     minMotFps = 999999
     maxMotFps = -1
     
+    ignoreController = False
+    
     while True:
         time.sleep(0.0001)
         socks = zmq.select(subs_socks, [], [], 0.001)[0]
@@ -190,7 +202,7 @@ def mainHwGate():
                 ser.flush()
      
     
-            if topic == zmq_topics.topic_thrusters_comand:
+            if topic == zmq_topics.topic_thrusters_comand and not ignoreController:
                 _, current_command = pickle.loads(ret[1])
                 c = current_command
                 if rov_type == 4:
@@ -227,6 +239,31 @@ def mainHwGate():
                 msgBuf = struct.pack(serialMotorsMsgPack, marker, OP_MOTORS, *motorsPwm)
                 ser.write(msgBuf)
                 ser.flush()
+                #print(time.time(), '---motors regular cmd to esp32 --->',motorsPwm)
+                
+            if topic == zmq_topics.topic_check_thrusters_comand:
+                _, current_command = pickle.loads(ret[1])
+                m = current_command
+                tmp = m[6]
+                m[6] = m[7]
+                m[7] = tmp
+                
+                motorsPwm = setCmdToPWM(m)
+
+                if any(motorsPwm): 
+                    ignoreController = True
+                else:
+                    ignoreController = False
+
+                print('---motors check cmd to esp32 --->',motorsPwm)
+                
+                msgBuf = struct.pack(serialMotorsMsgPack, marker, OP_MOTORS, *motorsPwm)
+                ser.write(msgBuf)
+                ser.flush()
+                
+                pub_motors.send_multipart( [zmq_topics.topic_motors_output, pickle.dumps( {'ts':time.time(), 'motors':motorsPwm} )])
+                
+                
     
         ret = select([ser],[],[],0.001)[0]
         if len(ret) > 0:

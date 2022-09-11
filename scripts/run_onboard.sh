@@ -78,6 +78,13 @@ run 4 utils "recorder.py $auto"
 # run 4 utils recorder_sonar.py
 # run 5 hw ros_sonar.py
 runShell 5 hw/sonar_docker "./run.sh"
+#run 3 hw sonar.py
+# run 4 utils recorder.py
+
+
+tmux new-window
+new_6_win
+run 0 utils udpGate.py
 
 #runShell 5 . jtop
 #tmux att

@@ -34,7 +34,10 @@ new_4_win
 
 if [ "$1" != "local" ]; then
     runShell 0 scripts ./ssh_route.sh
+else
+    run 0 utils "udpGate.py -g"
 fi
+#runShell 0 scripts ./ssh_route.sh
 sleep 1
 runLoop 1 ground_control joy_rov.py
 #run 2 ground_control "viewer.py --pub_data --udp"
