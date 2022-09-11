@@ -59,6 +59,8 @@ RUN apt-get -y install libgtk2.0-dev
 # RUN pip3 install scikit-build
 RUN pip3 install git+https://github.com/scikit-build/scikit-build.git@56273a249f48cf0701cd20f733e8379c3587aacb
 #==0.14.0
+RUN apt-get update
+RUN python3 -m pip install --upgrade pip
 RUN pip3 install cmake
 RUN pip3 install pybullet 
 RUN pip3 install pygame 
