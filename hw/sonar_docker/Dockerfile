@@ -2,8 +2,8 @@
 # this dockerfile roughly follows the 'Ubuntu install of ROS Melodic' from:
 #   http://wiki.ros.org/melodic/Installation/Ubuntu
 #
-# ARG BASE_IMAGE=nvcr.io/nvidia/l4t-base:r32.5.0
-ARG BASE_IMAGE=ubuntu:bionic
+ARG BASE_IMAGE=nvcr.io/nvidia/l4t-base:r32.5.0
+# ARG BASE_IMAGE=ubuntu:bionic
 FROM ${BASE_IMAGE}
 
 # ARG ROS_PKG=ros_base

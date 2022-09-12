@@ -22,7 +22,7 @@ topic_camera_port=7789
 
 
 topic_sonar = b'topic_sonar'
-topic_sonar_port = 9301
+topic_sonar_port = 9304
 
 
 # socket_pub = utils.publisher(topic_camera_port)

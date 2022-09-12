@@ -65,7 +65,7 @@ topic_imu = b'topic_imu'
 topic_imu_port = 8897
 
 topic_sonar = b'topic_sonar'
-topic_sonar_port = 9301
+topic_sonar_port = 9304
 
 topic_depth = b'topic_depth'
 topic_depth_port = 9302
