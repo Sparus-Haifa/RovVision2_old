@@ -56,14 +56,15 @@ class Camera(object):
         """
         Allocate memory for futur images.
         """
-        # Get camera settings
+        # print('Get camera settings')
         rect = self.get_aoi()
         bpp = get_bits_per_pixel(self.get_colormode())
-        # Check that already existing buffers are free
+        # print('Check that already existing buffers are free')
         for buff in self.img_buffers:
+            check(ueye.is_UnlockSeqBuf(self.h_cam, buff.mem_id, buff.mem_ptr))
             check(ueye.is_FreeImageMem(self.h_cam, buff.mem_ptr, buff.mem_id))
         self.img_buffers = []
-        # Create asked buffers
+        # print('Create asked buffers')
         for i in range(self.buffer_count):
             buff = ImageBuffer()
             ueye.is_AllocImageMem(self.h_cam,
@@ -71,7 +72,7 @@ class Camera(object):
                                   buff.mem_ptr, buff.mem_id)
             check(ueye.is_AddToSequence(self.h_cam, buff.mem_ptr, buff.mem_id))
             self.img_buffers.append(buff)
-        # Check that ...
+        # print('Check that ...')
         ueye.is_InitImageQueue(self.h_cam, 0)
 
     def init(self):
@@ -332,6 +333,7 @@ class Camera(object):
                                        timeout,
                                        img_buffer.mem_ptr,
                                        img_buffer.mem_id)
+        check(ret)
         if ret == ueye.IS_SUCCESS:
             imdata = ImageData(self.handle(), img_buffer)
             data = imdata.as_1d_image()

@@ -12,7 +12,7 @@
   dynamic_reconfigure
 -->
 <launch>
-  <arg name="range" default="2"/>
+  <arg name="range" default="20"/>
   <arg name="gain_percent" default="100"/>
   <arg name="gamma" default="127"/>
   <arg name="ping_rate" default="0"/>

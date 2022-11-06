@@ -143,8 +143,17 @@ RUN apt-get update && apt-get install -y openssh-client
 
 # RUN useradd -m user
 RUN mkdir -p /home/root/.ssh
-COPY id_rsa_shared /root/.ssh/id_rsa
-COPY id_rsa_shared.pub /root/.ssh/id_rsa.pub
+# COPY id_rsa_shared /root/.ssh/id_rsa
+# COPY id_rsa_shared.pub /root/.ssh/id_rsa.pub
+
+RUN echo "test"
+
+COPY id_rsa /root/.ssh/id_rsa
+COPY id_rsa.pub /root/.ssh/id_rsa.pub
+
+RUN eval `ssh-agent -s` && chmod 600 /root/.ssh/id_rsa  && ssh-add /root/.ssh/id_rsa
+
+
 # RUN pip3 install pyueye
 # COPY info.txt /home/user/
 
