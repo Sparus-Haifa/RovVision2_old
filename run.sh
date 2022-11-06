@@ -23,6 +23,7 @@ if [ "$1" = "auto" ]; then
 fi
 
 
+# --volume="${PWD}:/home/docker" \
 docker run  \
     -it \
     --rm \
@@ -31,7 +32,8 @@ docker run  \
     --env="QT_X11_NO_MITSHM=1" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --privileged  \
-    --volume="${PWD}:/home/docker" \
+    --mount type=bind,source="${PWD}",target=/home/docker,bind-propagation=shared \
+    --env DIND_USER_HOME=${PWD} \
     --volume="/var/run/docker.sock:/var/run/docker.sock" \
     --volume="/dev/bus/usb:/dev/bus/usb" \
     --volume="/dev:/dev" \

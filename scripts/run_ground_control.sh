@@ -47,10 +47,10 @@ run 2 ground_control "rovViewer.py $viewer_arg"
 #run 2 web "--version && FLASK_APP=server.py flask run"
 #run 3 web "--version && sleep 3 && firefox http://127.0.0.1:5000/static/html/ropedive.html --new-window  --new-tab -url http://127.0.0.1:5000/static/html/checklists.html"
 
-if [ "$1" != "local" ]; then
-    sleep 8
-    runShell 3 scripts ./run_sonar_reconfigure_docker.sh
-fi
+# if [ "$1" != "local" ]; then
+#     sleep 8
+runShell 3 scripts ./run_sonar_reconfigure_docker.sh
+# fi
 
 
 
