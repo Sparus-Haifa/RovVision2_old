@@ -33,7 +33,7 @@ new_4_win
 
 
 if [ "$1" != "local" ]; then
-    runShell 0 scripts ./ssh_route.sh
+    runShell 0 scripts ./ssh_route_persist.sh
 else
     run 0 utils "udpGate.py -g"
 fi

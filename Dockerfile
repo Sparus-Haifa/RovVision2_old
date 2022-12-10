@@ -146,7 +146,7 @@ RUN mkdir -p /home/root/.ssh
 # COPY id_rsa_shared /root/.ssh/id_rsa
 # COPY id_rsa_shared.pub /root/.ssh/id_rsa.pub
 
-RUN echo "test"
+# RUN echo "test"
 
 COPY id_rsa /root/.ssh/id_rsa
 COPY id_rsa.pub /root/.ssh/id_rsa.pub

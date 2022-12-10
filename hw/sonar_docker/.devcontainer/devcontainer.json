@@ -24,7 +24,8 @@
 	"build": { "args": { "DISTRO": "melodic", "MYARGFROMENVVAR": "${localEnv:VARIABLE_NAME}" } },
 
 	// "runArgs": ["--env=DISPLAY=${env:DISPLAY}", "--net=host"],
-	"runArgs": ["--env=DISPLAY=${env:DISPLAY}", "--env=QT_X11_NO_MITSHM=1", "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw", "--env=XAUTHORITY=${env:XAUTH}", "--volume=${env:XAUTH}:${env:XAUTH}", "--runtime=nvidia", "--net=host"],
+	// "runArgs": ["--env=DISPLAY=${env:DISPLAY}", "--env=QT_X11_NO_MITSHM=1", "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw", "--env=XAUTHORITY=${env:XAUTH}", "--volume=${env:XAUTH}:${env:XAUTH}", "--runtime=nvidia", "--net=host"],
+	"runArgs": ["--env=DISPLAY=${env:DISPLAY}", "--env=QT_X11_NO_MITSHM=1", "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw", "--env=XAUTHORITY=${env:XAUTH}", "--volume=${env:XAUTH}:${env:XAUTH}", "--net=host"],
 
 
 

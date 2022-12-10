@@ -97,5 +97,9 @@ run 0 utils udpGate.py
 # run 2 utils recorder_sonar.py
 # sleep 7
 # run 3 hw sonar_reconfigure.py
+
+tmux new-window
+new_6_win
+run 0 hw enable_sonar.py
 fi
 

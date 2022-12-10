@@ -2047,6 +2047,7 @@ class rovViewerWindow(Frame):
             
     
     def fullVideoScreenEvent(self, event):
+        print("fullScreen")
         self.openVideoWindow()
         
         

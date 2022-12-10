@@ -21,7 +21,7 @@ dictitems:
         state: []
       parent: 0
       ping_rate: 3
-      range: 10.0
+      range: 8.0
       send_gain: true
       send_range_as_meters: true
       send_simple_return: true
@@ -30,7 +30,7 @@ dictitems:
     state: []
   num_beams: 1
   ping_rate: 3
-  range: 10.0
+  range: 8.0
   send_gain: true
   send_range_as_meters: true
   send_simple_return: true
