@@ -57,12 +57,12 @@ class myCamera:
         self.expCtl = 1
         self.desExpVal = 50
 
-        camStateFile = '../hw/camSate.pkl'
+        self.camStateFile = '../hw/camSate.pkl'
 
         self.camState = {}
         self.desExpVal = -1
-        if os.path.exists(camStateFile):
-            with open(camStateFile, 'rb') as fid:
+        if os.path.exists(self.camStateFile):
+            with open(self.camStateFile, 'rb') as fid:
                 self.camState = pickle.load(fid)
                 if 'aGain' in self.camState.keys():
                     self.gainCtl = self.camState['aGain']
@@ -131,17 +131,17 @@ class myCamera:
                 ret=sock.recv_multipart()
                 topic,data=ret
                 
-                if topic==self.zmq_topics.topic_cam_toggle_auto_exp:
-                    self.self.expCtl = pickle.loads(data)
-                    print('set auto exp. to: %d'%self.self.expCtl)
-                    self.cam.set_exposure_auto(self.self.expCtl)
+                if topic==zmq_topics.topic_cam_toggle_auto_exp:
+                    self.expCtl = pickle.loads(data)
+                    print('set auto exp. to: %d'%self.expCtl)
+                    self.cam.set_exposure_auto(self.expCtl)
                 
-                if topic==self.zmq_topics.topic_cam_toggle_auto_gain:
-                    self.self.gainCtl = pickle.loads(data)
-                    print('set auto gain to: %d'%self.self.gainCtl)
-                    self.cam.set_gain_auto(self.self.gainCtl)
+                if topic==zmq_topics.topic_cam_toggle_auto_gain:
+                    self.gainCtl = pickle.loads(data)
+                    print('set auto gain to: %d'%self.gainCtl)
+                    self.cam.set_gain_auto(self.gainCtl)
                 
-                if topic==self.zmq_topics.topic_cam_inc_exp:
+                if topic==zmq_topics.topic_cam_inc_exp:
                     self.curExp = self.cam.get_exposure()
                     newExp = self.curExp + self.expJump
                     print('set exp (inc) to: %.2f'%newExp)
@@ -149,7 +149,7 @@ class myCamera:
                     print('--->', newExp)
                     self.self.camState['expVal'] = newExp
                     
-                if topic==self.zmq_topics.topic_cam_dec_exp:
+                if topic==zmq_topics.topic_cam_dec_exp:
                     self.curExp = cam.get_exposure()
                     newExp = max(1, self.curExp - self.expJump )
                     print('set exp (dec) to: %.2f'%newExp)
@@ -157,21 +157,21 @@ class myCamera:
                     print('--->', newExp)
                     self.self.camState['expVal'] = newExp
                     
-                if topic == self.zmq_topics.topic_cam_exp_val:
+                if topic == zmq_topics.topic_cam_exp_val:
                     self.curExp = self.cam.get_exposure()
                     newExp = pickle.loads(data)
                     print('set exp to: %.2f'%newExp)
                     newExp = self.cam.set_exposure(newExp)
                     print('--->', newExp)
-                    self.self.camState['expVal'] = newExp
+                    self.camState['expVal'] = newExp
                     
                     
 
-                self.camState['aGain'] = self.self.gainCtl
-                self.camState['aExp'] = self.self.expCtl
+                self.camState['aGain'] = self.gainCtl
+                self.camState['aExp'] = self.expCtl
                 
                 with open(self.camStateFile, 'wb') as fid:
-                    pickle.dump(self.self.camState, fid)
+                    pickle.dump(self.camState, fid)
                 
                 
             self.curExp = self.cam.get_exposure()
