@@ -16,6 +16,22 @@ import zmq_wrapper as utils
 import pandas as pd
 from datetime import datetime
 
+usageDescription = 'usage while playing: \n\t(-) press space to run frame by frame \n\t(-) press r ro run naturally, ~10Hz \n\t(-) press +/- to increase/decrease playing speed'
+
+parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('-r', '--recPath', default=None, help=' path to record ')
+parser.add_argument('-s', '--skipFrame', type=int, default=-1, help='start of parsed frame, by frame counter not file index')
+parser.add_argument('-t', '--saveTiff', action='store_true', help='save tiffs files to record folder')
+parser.add_argument('-q', '--showVideo', action='store_false', help='quite run, if -q - parse only, no show')
+parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
+parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
+parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
+parser.add_argument('-c', '--zeroClock', action=None, help='reset the clock to argument time')
+
+
+args = parser.parse_args()
+
+
 
 class Player:
     def __init__(self):
@@ -39,7 +55,7 @@ class Player:
                     [zmq_topics.topic_sonar,              zmq_topics.topic_sonar_port],
                 ]
 
-
+        '''
         usageDescription = 'usage while playing: \n\t(-) press space to run frame by frame \n\t(-) press r ro run naturally, ~10Hz \n\t(-) press +/- to increase/decrease playing speed'
 
         parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
@@ -53,7 +69,7 @@ class Player:
         parser.add_argument('-c', '--zeroClock', action=None, help='reset the clock to argument time')
 
         args = parser.parse_args()
-
+        '''
         self.highQuality = args.highQuality
         self.recPath = args.recPath
         self.skipFrame = args.skipFrame 
@@ -75,8 +91,8 @@ class Player:
         # dataframe variables
         self.columns = ['topic', 'bagfile', 'label', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
         self.df_msgs_info_cur_bag = pd.DataFrame(columns=self.columns)
-
         if self.showVideo:
+            print('bla')
             self.winName = 'player_camera'
             self.winName_sonar = 'player_sonar'
             self.winNameLowRes = 'player - low Res'
@@ -150,13 +166,14 @@ class Player:
         curImName = '%08d.tiff'%self.frameId
 
         
+        #import ipdb; ipdb.set_trace()
         
         if self.showVideo:
             print('showVideo')
             if curTopic == zmq_topics.topic_stereo_camera:
                 winName_current = winName
             else:  # zmq_topics.topic_sonar
-                winName_current = winName_sonar
+                winName_current = self.winName_sonar
             print(winName_current)
             cv2.namedWindow(winName_current, 0)
 
@@ -378,7 +395,6 @@ class Player:
                         self.frameId += 1
                         hasHighRes = curData[1][-1]
                         metaData = pickle.loads(curData[1][1])
-                        
                         imShape  = metaData[1]
                     
                         try:
@@ -425,6 +441,13 @@ class Player:
                         self.frameId += 1
                         hasHighRes = curData[1][-1]
                         metaData = pickle.loads(curData[1][1])
+                        #print(self.frameId, metaData)
+                        #pirint('-->', telData)
+                        try:
+                            if 'focus' in telData.keys():
+                                print(self.frameId, telData['focus'])
+                        except:
+                            pass
                         fpsCnt+=1
                         if time.time() - fpsTic >= 5:
                             fps = fpsCnt/(time.time() - fpsTic)
