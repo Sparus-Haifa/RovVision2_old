@@ -36,6 +36,8 @@ if not main_path:
 filename = os.path.basename(main_path)
 main_path = os.path.dirname(main_path)
 
+print('main_path', main_path)
+
 
 
 def extract_digits(self):
@@ -120,19 +122,34 @@ df = pd.read_csv(csv_path)
 # for index, row in df.iterrows():
 index = 0
 # for index in
+skip = True
 while 0 <= index <= len(df): 
     row = df.iloc[index]
-    print(row['FLC'], row['FLS'])
-    flc, fls = (row['FLC'], row['FLS'])
-    # print(row)
-    flc_img = cv2.imread(flc)
-    cv2.imshow('FLC_window_name', flc_img)
+    index +=1
+    # print(row['FLC'], row['FLS'])
+    flc, fls, bagfile = (row['FLC'], row['FLS'], row['bagfile'])
+    # flc_img = cv2.imread(flc)
+    flc_path = os.path.join(main_path, bagfile, 'imgs', flc)
+    fls_path = os.path.join(main_path, bagfile, 'imgs', fls)
+    print(flc_path, fls_path, "of "+ str(len(df)))
 
-    fls_img = cv2.imread(fls)
-    cv2.imshow('FLS_window_name', fls_img)
+    if flc!="00032822.tiff" and skip:
+        continue
+    skip=False
+
+    flc_img = cv2.imread(flc_path)
+    cv2.imshow('FLC', flc_img)
+
+    fls_img = cv2.imread(fls_path)
+    scale_percent = 200 # percent of original size
+    width = int(fls_img.shape[1] * scale_percent / 100)
+    height = int(fls_img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    fls_img = cv2.resize(fls_img, dim, interpolation=cv2.INTER_LINEAR)
+    cv2.imshow('FLS', fls_img)
 
 
-    print("wait key")
+    # print("wait key")
     key = cv2.waitKey(curDelay)&0xff
     # key = cv2.waitKey(0)
     if key == ord('q') or key == 27:
@@ -160,10 +177,10 @@ while 0 <= index <= len(df):
     elif key == 81: #left
         print('left')
         index-=2
-    else:
-        print('key pressed ', key)
+    # else:
+    #     print('key pressed ', key)
 
-    index +=1
+    
 
 
         

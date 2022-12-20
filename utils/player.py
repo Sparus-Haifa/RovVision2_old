@@ -7,18 +7,20 @@ import argparse
 import time
 import sys
 sys.path.append('../')
+sys.path.append('utils')
+# print(sys.path)
 
+import zmq_wrapper as utils
 import zmq
 import zmq_topics
 import pickle
-import zmq_wrapper as utils
 
 import pandas as pd
 from datetime import datetime
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, recPath, skipFrame, saveTiff, showVideo, freeRun, highQuality, saveAvi, generateDataFrame):
 
 
 
@@ -40,40 +42,38 @@ class Player:
                 ]
 
 
-        usageDescription = 'usage while playing: \n\t(-) press space to run frame by frame \n\t(-) press r ro run naturally, ~10Hz \n\t(-) press +/- to increase/decrease playing speed'
 
-        parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
-        parser.add_argument('-r', '--recPath', default=None, help=' path to record ')
-        parser.add_argument('-s', '--skipFrame', type=int, default=-1, help='start of parsed frame, by frame counter not file index')
-        parser.add_argument('-t', '--saveTiff', action='store_true', help='save tiffs files to record folder')
-        parser.add_argument('-q', '--showVideo', action='store_false', help='quite run, if -q - parse only, no show')
-        parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
-        parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
-        parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
-        parser.add_argument('-c', '--zeroClock', action=None, help='reset the clock to argument time')
 
-        args = parser.parse_args()
-
-        self.highQuality = args.highQuality
-        self.recPath = args.recPath
-        self.skipFrame = args.skipFrame 
-        self.saveTiff = args.saveTiff
-        self.showVideo = args.showVideo
-        self.saveAvi = args.saveAvi
-        self.highSpeed = args.freeRun
+        self.highQuality = highQuality
+        self.recPath = recPath
+        self.skipFrame = skipFrame 
+        self.saveTiff = saveTiff
+        self.showVideo = showVideo
+        self.saveAvi = saveAvi
+        self.highSpeed = freeRun
+        self.generateDataFrame = generateDataFrame
         print('self.highSpeed', self.highSpeed)
-        self.zeroClock = args.zeroClock
+        print('self.highQuality', self.highQuality)
+        print('self.recPath', self.recPath)
+        print('self.skipFrame', self.skipFrame)
+        print('self.saveTiff', self.saveTiff)
+        print('self.showVideo', self.showVideo)
+        print('self.saveAvi', self.saveAvi)
+
+
 
 
         # datetime.strptime(date_time_str, '%d/%m/%y %H:%M:%S')
-        # exit()
+        # if self.showVideo:
+        #     print(f"{self.showVideo}")
+        #     exit()
 
 
 
 
 
         # dataframe variables
-        self.columns = ['topic', 'bagfile', 'label', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
+        self.columns = ['topic', 'bagfile', 'filename', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
         self.df_msgs_info_cur_bag = pd.DataFrame(columns=self.columns)
 
         if self.showVideo:
@@ -86,7 +86,10 @@ class Player:
 
 
         self.frameId = 0
-        self.curDelay = 0
+        if self.highSpeed:
+            self.curDelay = 1
+        else:
+            self.curDelay = 0
 
         ###
         self.font = cv2.FONT_HERSHEY_COMPLEX_SMALL
@@ -101,20 +104,20 @@ class Player:
         self.writerLowRes = None
 
 
-        print(usageDescription)
+        # print(usageDescription)
 
         if self.recPath == None:
             print('no path provided')
             sys.exit(1)
 
 
-    def create_data_frame(self, topic, bagfile, label, date, time, latitude, longitude, altitude, yaw, pitch, roll, velocity_x, velocity_y, velocity_z, depth):
+    def create_data_frame(self, topic, bagfile, filename, date, time, latitude, longitude, altitude, yaw, pitch, roll, velocity_x, velocity_y, velocity_z, depth):
         # global df_msgs_info_cur_bag
         # print('create_data_frame')
         msg_info = {}
         msg_info['topic'] =  topic.decode('utf-8')
         msg_info['bagfile'] = bagfile
-        msg_info['label'] = label
+        msg_info['filename'] = filename
         msg_info['date'] = date
         msg_info['time'] = time
         
@@ -149,16 +152,20 @@ class Player:
 
         curImName = '%08d.tiff'%self.frameId
 
-        
+        if self.saveTiff: # create imgs folder
+            if self.imgsPath is None:
+                self.imgsPath = os.path.join(self.recPath, 'imgs')
+                if not os.path.exists(self.imgsPath):
+                    os.system('mkdir -p %s'%self.imgsPath)
         
         if self.showVideo:
-            print('showVideo')
+            # print('showVideo')
             if curTopic == zmq_topics.topic_stereo_camera:
-                winName_current = winName
+                winName_current = self.winName
             else:  # zmq_topics.topic_sonar
-                winName_current = winName_sonar
-            print(winName_current)
-            cv2.namedWindow(winName_current, 0)
+                winName_current = self.winName_sonar
+            # print(winName_current)
+            # cv2.namedWindow(winName_current, 0)
 
         if im is not None:
             # print('im not none')
@@ -187,10 +194,7 @@ class Player:
                 self.writer.write(showIm)
 
         
-            if self.imgsPath is None:
-                self.imgsPath = os.path.join(self.recPath, 'imgs')
-                if not os.path.exists(self.imgsPath):
-                    os.system('mkdir -p %s'%self.imgsPath)
+
 
             # print("d2")
 
@@ -207,7 +211,7 @@ class Player:
             # print("d3")
             if self.showVideo:
                 # print('showing')
-                cv2.imshow(self.winName_current, showIm) #im[:200,:])
+                cv2.imshow(winName_current, showIm) #im[:200,:])
             
             # print("d4")
                 
@@ -240,14 +244,15 @@ class Player:
             
                 
             if self.showVideo:
-                if curTopic == self.zmq_topics.topic_stereo_camera:
-                    window_topic = self.winNameLowRes
-                    cv2.namedWindow(self.winName, 0)
+                # if curTopic == self.zmq_topics.topic_stereo_camera:
+                if curTopic == zmq_topics.topic_stereo_camera:
+                    winName_current = self.winNameLowRes
+                    # cv2.namedWindow(window_topic, 0)
                 else:
-                    window_topic = self.winNameLowResSonar
-                    cv2.namedWindow(self.winName_sonar, 0)
+                    winName_current = self.winNameLowResSonar
+                    # cv2.namedWindow(window_topic, 0)
                 # zmq_topics.topic_sonar
-                cv2.imshow(self.winName_current, showImLow) #im[:200,:])
+                cv2.imshow(winName_current, showImLow) #im[:200,:])
 
             if self.saveTiff:
                 # curImName = '%08d.tiff'%frameId
@@ -270,7 +275,7 @@ class Player:
 
             
             # print("wait key")
-            key = cv2.waitKey(curDelay)&0xff
+            key = cv2.waitKey(self.curDelay)&0xff
             # key = cv2.waitKey(0)
             if key == ord('q'):
                 return False
@@ -293,13 +298,14 @@ class Player:
 
         # print("d8")
 
-        generateDataFrame = True
-        if self.saveTiff and generateDataFrame:
+        # generateDataFrame = True
+        # if self.saveTiff and generateDataFrame:
+        if self.generateDataFrame:
             cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
             cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
             data_frame = self.create_data_frame(topic=curTopic, 
                 bagfile=os.path.basename(self.recPath), 
-                label=os.path.join(self.recPath, 'imgs', curImName), 
+                filename=curImName, # os.path.join(self.recPath, 'imgs', curImName), 
                 date=cur_date, time=cur_time,
                 latitude=None, longitude=None, altitude=None, yaw=None, pitch=None, roll=None,
                 velocity_x=None, velocity_y=None, velocity_z=None,
@@ -530,10 +536,11 @@ class Player:
             if self.writerLowRes is not None:
                 self.writerLowRes.release()
                 # saving csv information in the bag file directory
-            csv_path = os.path.join(self.recPath, 'image_nav_' + 'bagfile_name' + '.csv')
-            print('Saving bag file information into CSV...')
-            print(csv_path)
-            self.df_msgs_info_cur_bag.to_csv(csv_path, index=False)
+            if self.generateDataFrame:
+                csv_path = os.path.join(self.recPath, 'data.csv')
+                print('Saving bag file information into CSV...')
+                print(csv_path)
+                self.df_msgs_info_cur_bag.to_csv(csv_path, index=False)
             print("done...")            
             
 
@@ -544,5 +551,35 @@ class Player:
     cv2.namedWindow('high', 0)
     '''
 if __name__=='__main__':
-    player = Player()
+    usageDescription = 'usage while playing: \n\t(-) press space to run frame by frame \n\t(-) press r ro run naturally, ~10Hz \n\t(-) press +/- to increase/decrease playing speed'
+
+    parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-r', '--recPath', default=None, help=' path to record ')
+    parser.add_argument('-s', '--skipFrame', type=int, default=-1, help='start of parsed frame, by frame counter not file index')
+    parser.add_argument('-t', '--saveTiff', action='store_true', help='save tiffs files to record folder')
+    parser.add_argument('-q', '--showVideo', action='store_false', help='quite run, if -q - parse only, no show')
+    parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
+    parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
+    parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
+
+    args = parser.parse_args()
+
+    self.highQuality = args.highQuality
+    self.recPath = args.recPath
+    self.skipFrame = args.skipFrame 
+    self.saveTiff = args.saveTiff
+    self.showVideo = args.showVideo
+    self.saveAvi = args.saveAvi
+    self.highSpeed = args.freeRun
+    print('self.highSpeed', self.highSpeed)
+
+
+    print('self.highQuality', self.highQuality)
+    print('self.recPath', self.recPath)
+    print('self.skipFrame', self.skipFrame)
+    print('self.saveTiff', self.saveTiff)
+    print('self.showVideo', self.showVideo)
+    print('self.saveAvi', self.saveAvi)
+    print('self.highSpeed', self.highSpeed)
+    player = Player(recPath=args.recPath, skipFrame=args.skipFrame, saveTiff=args.saveTiff, showVideo=args.showVideo, freeRun=args.freeRun, highQuality=args.highQuality, saveAvi=args.saveAvi)
     player.parse()
