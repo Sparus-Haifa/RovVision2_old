@@ -93,25 +93,25 @@ WORKDIR /home/catkin_ws/src
 
 RUN git clone https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver.git
 # RUN cd oculus_sonar_driver && git checkout 926eb59065b82cddbbf94f07469aebfa1c3720ed && cd ..
-# RUN apt-get install -y python3-vcstool
-# RUN vcs import --input oculus_sonar_driver/oculus_sonar_driver.rosinstall
+RUN apt-get install -y python3-vcstool
+RUN vcs import --input oculus_sonar_driver/oculus_sonar_driver.rosinstall
 
 
-RUN git clone https://github.com/apl-ocean-engineering/hydrographic_msgs.git
-RUN cd hydrographic_msgs && git checkout 8a053bd4d14955363940e63c14e646d28da75504 && cd ..
+# RUN git clone https://github.com/apl-ocean-engineering/hydrographic_msgs.git
+# RUN cd hydrographic_msgs && git checkout 8a053bd4d14955363940e63c14e646d28da75504 && cd ..
 
-RUN git clone https://gitlab.com/apl-ocean-engineering/g3log_ros.git
-RUN cd g3log_ros && git checkout 65c63b96801d501bef852a8177d7c137a723ea54 && cd ..
+# RUN git clone https://gitlab.com/apl-ocean-engineering/g3log_ros.git
+# RUN cd g3log_ros && git checkout 65c63b96801d501bef852a8177d7c137a723ea54 && cd ..
 
-RUN git clone https://github.com/apl-ocean-engineering/liboculus.git
-RUN cd liboculus && git checkout 7f2f82b9b58c6f10e76f820f8313b4f387597e9d && cd ..
+# RUN git clone https://github.com/apl-ocean-engineering/liboculus.git
+# RUN cd liboculus && git checkout 7f2f82b9b58c6f10e76f820f8313b4f387597e9d && cd ..
 
-RUN git clone https://github.com/apl-ocean-engineering/sonar_image_proc.git
-RUN cd sonar_image_proc && git checkout cdacfd3ba5234fa338dd6f5ffb0f243e86a79dd0 && cd ..
+# RUN git clone https://github.com/apl-ocean-engineering/sonar_image_proc.git
+# RUN cd sonar_image_proc && git checkout cdacfd3ba5234fa338dd6f5ffb0f243e86a79dd0 && cd ..
 
 
-RUN git clone https://gitlab.com/apl-ocean-engineering/apl_msgs.git
-RUN cd apl_msgs && git checkout e0dd91aecceb8e1fad932afcc1f142e5da5d52ff && cd ..
+# RUN git clone https://gitlab.com/apl-ocean-engineering/apl_msgs.git
+# RUN cd apl_msgs && git checkout e0dd91aecceb8e1fad932afcc1f142e5da5d52ff && cd ..
 
 
 WORKDIR /home/catkin_ws/
@@ -122,7 +122,7 @@ WORKDIR /home/catkin_ws/
 # RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make --only-pkg-with-deps sonar_image_proc'
 # ADD CMakeLists.txt /home/catkin_ws/src/oculus_sonar_driver/CMakeLists.txt
 # RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make -DCATKIN_WHITELIST_PACKAGES=""'
-RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make'
+RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make || catkin_make'
 
 
 
@@ -161,20 +161,20 @@ RUN /bin/bash -c '. /opt/ros/melodic/setup.bash && catkin_make'
 
 
 
-# # 
-# # setup entrypoint
-# #
-# COPY ./packages/ros_entrypoint.sh /ros_entrypoint.sh
+# # # 
+# # # setup entrypoint
+# # #
+# # COPY ./packages/ros_entrypoint.sh /ros_entrypoint.sh
 
-COPY ./ros_entrypoint.sh /
+# COPY ./ros_entrypoint.sh /
 
 
-RUN echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /root/.bashrc
-RUN echo "source /home/catkin_ws/devel/setup.bash" >> ~/.bashrc
+# RUN echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /root/.bashrc
+# RUN echo "source /home/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
-# ENTRYPOINT ["/ros_entrypoint.sh"]
-# CMD ["bash"]
-# CMD ["roscore"]
-# WORKDIR /
+# # ENTRYPOINT ["/ros_entrypoint.sh"]
+# # CMD ["bash"]
+# # CMD ["roscore"]
+# # WORKDIR /
 
-ADD oculus_sonar_driver/launch/default_ros.launch /home/catkin_ws/src/oculus_sonar_driver/launch/default_ros.launch
+# ADD oculus_sonar_driver/launch/default_ros.launch /home/catkin_ws/src/oculus_sonar_driver/launch/default_ros.launch

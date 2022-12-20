@@ -5,7 +5,7 @@ tmux new-session -d -s syncRec
 
 # tmux send-keys -t syncRec "rsync -avuAXEh --progress --info=progress2 --partial-dir=.rsync-partial --remove-source-files --exclude=".git" --exclude="*.py" --exclude="*.bck" --include="*/" --include="*.pkl" --include="*.bin" $REMOTE_SUB:/home/nanosub/proj/RovVision2/records $HOME/proj/RovVision2/" ENTER
 # tmux send-keys -t syncRec "rsync -avuAXEh --progress --info=progress2 --partial-dir=.rsync-partial --remove-source-files --exclude=".git" --exclude="*.py" --exclude="*.bck" --include="*/" --include="*.pkl" --include="*.bin" $REMOTE_SUB:/home/nanosub/proj/RovVision2/records /home/docker/" ENTER
-tmux send-keys -t syncRec "rsync -avuAXEh --progress --info=progress2 --partial-dir=.rsync-partial --exclude=".git" --exclude="*.py" --exclude="*.bck" --include="*/" --include="*.pkl" --include="*.bin" $REMOTE_SUB:/home/nanosub/proj/RovVision2/records /home/docker/" ENTER
+tmux send-keys -t syncRec "rsync -avuAXEh --progress --info=progress2 --partial-dir=.rsync-partial --exclude=".git" --exclude="*.py" --exclude="*.bck" --include="*/" --include="*.pkl" --include="*.bin" $REMOTE_SUB:/home/nanosub/proj/RovVision2/records /home/brov/eilat20221211/" ENTER
 
 
 # tmux send-keys -t syncRec "sleep 30" ENTER

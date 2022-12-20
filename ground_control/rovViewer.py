@@ -1062,7 +1062,7 @@ class rovViewerWindow(Frame):
         chars = event.widget.get()
         try:
             #pass
-            val = min(max(float(chars.strip()),0),100)
+            val = min(max(float(chars.strip()),0),300)
             self.myStyle['exposureCMD_textbox'].delete(0, END)
             self.myStyle['exposureCMD_textbox'].insert(0,str(val))
             print('new exposure: %f'%val)
@@ -2047,6 +2047,7 @@ class rovViewerWindow(Frame):
             
     
     def fullVideoScreenEvent(self, event):
+        print("fullScreen")
         self.openVideoWindow()
         
         

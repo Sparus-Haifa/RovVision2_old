@@ -121,6 +121,7 @@ def recorder():
     imgCnt = 0
     imgDilution = 4 #save full frame each
     hasHighQuality = False
+    enableRec = True
     while True:
         socks = zmq.select(subs_socks, [], [], 0.001)[0]
         ts = time.time()
@@ -131,6 +132,7 @@ def recorder():
             total, used, free = shutil.disk_usage("/")
             if free//2**30 < 5:
                 doRec = False
+                enableRec = False
                 print("***Low disk space - record Stopped! ******"*5)
 
         for sock in socks:
@@ -145,7 +147,7 @@ def recorder():
                     newDoRec = pickle.loads(ret[1])['record']
                     if args.auto:
                         newDoRec = True
-                    if (newDoRec) and (not doRec):
+                    if (newDoRec) and (not doRec) and enableRec:
                         recPath = initRec()
                         print('record started, %s'%recPath)
                         doRec = True
