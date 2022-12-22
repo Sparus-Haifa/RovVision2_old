@@ -17,7 +17,7 @@ class VideoMaker():
     def __init__(self, csv_path):
         self.csv_path = csv_path
         self.folder_path = os.path.dirname(csv_path)
-        self.topics = {'camera': Topic('camera',"b'topic_stereo_camera'"), 'sonar': Topic('sonar', "b'topic_sonar'")}
+        self.topics = {'camera': Topic('camera',"topic_stereo_camera"), 'sonar': Topic('sonar', "topic_sonar")}
         self.curr_image_path = {'camera': None, 'sonar': None}
         self.last_image_path = {'camera': None, 'sonar': None}
         self.last_timestamp = {'camera': None, 'sonar': None}

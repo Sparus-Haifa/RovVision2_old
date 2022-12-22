@@ -195,6 +195,7 @@ RUN echo 'export ROV_TYPE=4' >> ~/.bashrc
 RUN pip3 install pandas
 RUN pip3 install natsort
 RUN pip3 install sklearn
+RUN pip3 install scikit-learn 
 
 
 

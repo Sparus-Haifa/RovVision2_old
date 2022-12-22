@@ -24,8 +24,8 @@ class Exporter:
         # Create images and/or csv for every folder
         for record in self.all_records_directories:
             print(record)
-            if record=="../bags/20221120_112451":
-                continue
+            # if "20221213_102542" not in record:
+            #     continue
 
             if not os.path.isdir(record): # skip files. process only directories
                 print('skipping')
@@ -84,21 +84,31 @@ class Exporter:
 def main():
     usageDescription = 'export data'
 
-    parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('recPath', help=' path to record ')
-    parser.add_argument('-t', '--saveTiff', action='store_true', help='save tiffs files to record folder')
-    parser.add_argument('-q', '--showVideo', action='store_false', help='quite run, if -q - parse only, no show')
-    parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
-    # parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
-    parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
-    parser.add_argument('-d', '--saveMetadata', action='store_true', help='save a csv file with metadata')
+    # parser = argparse.ArgumentParser(description='synced record parser, %s'%usageDescription, formatter_class=argparse.RawTextHelpFormatter)
+    # parser.add_argument('recPath', help=' path to record ')
+    # parser.add_argument('-t', '--saveTiff', action='store_true', help='save tiffs files to record folder')
+    # parser.add_argument('-q', '--showVideo', action='store_false', help='quite run, if -q - parse only, no show')
+    # parser.add_argument('-f', '--freeRun', action='store_true', help='Not true realtime run')
+    # # parser.add_argument('-H', '--highQuality', action='store_true', help='Parse also high quality')
+    # parser.add_argument('-V', '--saveAvi', action='store_true', help='quite run, if -V - create avi files')
+    # parser.add_argument('-d', '--saveMetadata', action='store_true', help='save a csv file with metadata')
 
     
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
 
-    exporter = Exporter(recPath=args.recPath, showVideo=args.showVideo,  freeRun=args.freeRun, saveTiff=args.saveTiff, saveAvi=args.saveAvi, saveMetadata=args.saveMetadata)
-    
+    # exporter = Exporter(recPath=args.recPath, showVideo=args.showVideo,  freeRun=args.freeRun, saveTiff=args.saveTiff, saveAvi=args.saveAvi, saveMetadata=args.saveMetadata)
+
+    recPath = "/workspaces/RovVision2_old/bags"
+    showVideo = False
+    freeRun = True
+    saveTiffs = True
+    saveAvi = False
+    saveMeta = True
+
+    exporter = Exporter(recPath=recPath, showVideo=showVideo,  freeRun=freeRun, saveTiff=saveTiffs, saveAvi=saveAvi, saveMetadata=saveMeta)
+
+
     #export images and metadata.csv
     
     # exporter.run_player()
