@@ -155,8 +155,13 @@ while True:
         print("limits_df['bagfile']", limits_df['bagfile'])
         print("limits_df['bagfile'] > bagfile", limits_df['bagfile'] > bagfile)
         print("limits_df.loc[limits_df['bagfile'] > bagfile]['bagfile']", limits_df.loc[limits_df['bagfile'] > bagfile]['bagfile'])
-        next_bagfile = limits_df.loc[limits_df['bagfile'] > bagfile]['bagfile'].iloc[0]
-        # next_bagfile = bagfile
+        # get the 
+        # next_bagfile = limits_df.loc[limits_df['bagfile'] > bagfile]['bagfile'].iloc[0]
+        # Select the rows that contain the value 'a' in the 'col' column
+        df_selected = limits_df[limits_df['bagfile'].isin([bagfile])]
+
+        # Get the next value after 'a'
+        next_bagfile = limits_df.loc[df_selected.index[-1] + 1, 'bagfile']
         print("next bagfile", next_bagfile)
         # exit()
         # set the index to the first image of the next bagfile from the df dataframe
@@ -186,6 +191,26 @@ while True:
     skip=False
 
     flc_img = cv2.imread(flc_path)
+
+    text = f"{index}"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+
+    # Set the text color and thickness
+    color = (255, 0, 0)  # Red
+    thickness = 2
+
+    # Get the size of the text
+    text_size = cv2.getTextSize(text, font, 1, thickness)[0]
+
+    # Calculate the position of the text
+    # text_x = (flc_img.shape[1] - text_size[0]) // 2
+    # text_y = (flc_img.shape[0] + text_size[1]) // 2
+
+    # Add the text to the image
+    cv2.putText(flc_img, text, (10, 30), font, 1, color, thickness, cv2.LINE_AA)
+
+
+
     cv2.imshow('FLC', flc_img)
 
     fls_img = cv2.imread(fls_path)
