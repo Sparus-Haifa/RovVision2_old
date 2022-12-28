@@ -76,16 +76,21 @@ class PairFinder:
         # data frame for the CSV
         df = pd.read_csv(csv_path)
         # init Dataframe for pairs data set
-        df_pairs = pd.DataFrame(columns=['FLC', 'FLS'])
+        df_pairs = pd.DataFrame(columns=['FLC', 'FLS', 'bagfile'])
+
+        # print(df_pairs.head())
+        # exit()
 
         # list of of bag files
         bags_list = list(set(df['bagfile'].to_list()))
         print(bags_list)
 
+     
+
 
         # iterating over the bags files
         for bag_ii in bags_list:
-            # print(bag_ii)
+            print(bag_ii)
             # df slicing according current bagfile
             df_tmp = df.loc[df['bagfile'] == bag_ii]
             # indices of FLC images
@@ -104,6 +109,8 @@ class PairFinder:
             df_FLC = df_tmp.loc[FLC_idx]['filename']
             df_FLS = df_tmp.loc[FLS_idx]['filename']
             df_Bag = df_tmp.loc[FLC_idx]['bagfile']
+            
+            
 
             # changing paths to local main path
             # df_FLC = df_FLC.apply(lambda x: change_main_path(main_path=main_path, path_string=x, keep_path_locations=-3))
@@ -112,7 +119,15 @@ class PairFinder:
             # appending pairs datafame
             df_pairs = pd.concat([df_pairs, pd.DataFrame({'FLC': df_FLC.to_list(),
                                                         'FLS': df_FLS.to_list(),
-                                                        'bagfile': df_Bag.to_list()})], ignore_index=True)
+                                                        'bagfile': df_Bag.to_list()
+                                                        })], ignore_index=True)
+
+            # df_pairs = df_pairs.reset_index().rename(columns={'index': 'Index'})
+
+        # add header to the index column
+        df_pairs = df_pairs.rename_axis('Index', axis='index')
+
+
 
     
 
