@@ -6,8 +6,7 @@ import csv
 import os
 
 CONTROL_FRAME_HEIGHT = 200
-# Set the indices of the markers
-marker_indices = [0, 2, 4, 6, 8]
+
 
 class ImageViewer(tk.Frame):
     def __init__(self, master=None):
@@ -21,12 +20,27 @@ class ImageViewer(tk.Frame):
         # Initialize the state of the viewer
         self.current_index = 0
         self.images = []
+        self.file_path = None
+        self.sections_file_path = None
+        self.sections = []
+        # Set the indices of the markers
+        # self.marker_indices = []
         # self.update_image()
         self.paused = True
         self.speed = 1.0
 
         # Bind the resize event to the callback function
         self.bind("<Configure>", self.on_resize)
+
+        # Bind the <Left> and <Right> events to the functions
+        # self.bind_all('<KeyPress-Left>', self.show_previous_image)
+        # self.bind_all('<KeyPress-Right>', self.show_next_image)
+
+        # self.start_keypresses()
+
+        self.bind_all('<KeyPress-Left>', self.show_previous_image)
+        self.bind_all('<KeyPress-Right>', self.show_next_image)
+
 
         # Get the original size of the image
 
@@ -70,8 +84,8 @@ class ImageViewer(tk.Frame):
         self.speed_scale.pack(side="left")
 
         # Create the progress bar
-        self.progress_bar = ttk.Progressbar(self.control_frame, orient="horizontal", length=200)
-        self.progress_bar.pack(side=tk.TOP, fill=tk.X, expand=True)
+        # self.progress_bar = ttk.Progressbar(self.control_frame, orient="horizontal", length=200)
+        # self.progress_bar.pack(side=tk.TOP, fill=tk.X, expand=True)
 
         # Create a seeker frame
         self.seeker_frame = tk.Frame(self)
@@ -90,12 +104,42 @@ class ImageViewer(tk.Frame):
         self.seeker.bind('<Configure>', self.draw_markers)
 
         # Create the status label
-        self.status_label = tk.Label(self.control_frame, text="Status")
-        self.status_label.pack(side="bottom", fill=tk.X)
+        # self.status_label = tk.Label(self.control_frame, text="Status")
+        # self.status_label.pack(side="bottom", fill=tk.X)
 
         # Create an index label
-        self.index_label = tk.Label(self.control_frame, text="Index")
-        self.index_label.pack(side="bottom", fill=tk.X)
+        self.index_label = tk.Label(self.control_frame, text="")
+        self.index_label.pack(side="right")
+
+        # Create a Enable/Disable sections button
+        self.enable_disable_button = tk.Button(self.control_frame, text="Enable/Disable Sections", command=self.enable_disable_sections)
+        self.enable_disable_button.pack(side="right")
+        # Set the initial state of the button as disabled
+        self.enable_disable_button.configure(state="disabled")
+
+    # Create a function to open the sections csv file
+    def enable_disable_sections(self):
+        print("enable_disable_sections")
+        # Open the csv file
+        main_path = os.path.dirname(self.file_path)
+        sections_file_path = os.path.join(main_path, "sections.csv")
+        with open(sections_file_path) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            # Skip the header
+            next(csv_reader)
+            for row in csv_reader:
+                print(row)
+                # Get the start and end indices of the section
+                start_index = int(row[2])
+                end_index = int(row[3])
+                # Get the recording name
+                recording_name = row[1] 
+                self.sections.append((start_index, end_index, recording_name))
+
+        # Update markers
+        self.draw_markers(None)
+
+
 
     def draw_markers(self, event):
         print("draw_markers")
@@ -111,22 +155,32 @@ class ImageViewer(tk.Frame):
 
         # Draw a vertical line at each marker index
         # for index in marker_indices:
-        for index in range(len(self.images)):
-            x = index * marker_distance
-            self.canvas.create_line(x, 0, x, height, fill='red')
+        # for index in range(len(self.images)):
+        for section in self.sections:
+            start_index = section[0]
+            end_index = section[1]
+
+            # x = index * marker_distance
+            # self.canvas.create_line(x, 0, x, height, fill='red')
+            self.canvas.create_rectangle(start_index * marker_distance, 0, end_index * marker_distance, height, fill='red')
 
     def show_image_at_index(self, index):
-        pass
+        print("show_image_at_index")
+        # Get the index of the image to show
+        self.current_index = int(float(index))
+        # Update the image
+        self.update_image()
+        self.update_index_label()
 
     def open_csv(self):
         # Open a file dialog to select the CSV file
-        filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
 
         # Get the directory of the CSV file
-        main_path = os.path.dirname(filepath)
+        main_path = os.path.dirname(self.file_path)
 
         # Read the image pairs from the CSV file
-        with open(filepath, "r") as f:
+        with open(self.file_path, "r") as f:
             reader = csv.reader(f)
             headers = next(reader)
             for row in reader:
@@ -147,7 +201,12 @@ class ImageViewer(tk.Frame):
         # self.image_label.configure(width=300, height=300)
 
         self.update_image()
-        self.progress_bar.config(maximum=len(self.images))
+        # self.progress_bar.config(maximum=len(self.images))
+        # self.update_index_label()
+        self.update_progress()
+        # Enable the enable/disable sections button
+        self.enable_disable_button.config(state="normal")
+
         self.seeker.config(to=len(self.images))
         self.paused = True
         self.speed = 1.0
@@ -204,18 +263,37 @@ class ImageViewer(tk.Frame):
         # Update the image label with the new image
         self.image_label.config(image=self.image)
 
+        # Process any pending idle tasks before updating the label
+        self.update_idletasks()
+
     def play_pause(self):
-        print("play_pause")
-        print("paused", self.paused)
         if self.paused:
-            # Change the button text to "Pause" and start the update loop
-            self.play_pause_button.config(text="Pause")
             self.paused = False
-            self.update_loop()
+            self.play_pause_button.config(text="Pause")
         else:
-            # Change the button text to "Play" and stop the update loop
-            self.play_pause_button.config(text="Play")
             self.paused = True
+            self.play_pause_button.config(text="Play")
+
+
+
+    def show_previous_image(self, event=None):
+        # Go back to the previous image
+        if not self.images:
+            return
+        self.current_index = (self.current_index - 1) % len(self.images)
+        self.update_image()
+        self.update_progress()
+        
+
+    def show_next_image(self, event=None):
+        # Advance to the next image
+        if not self.images:
+            return
+        self.current_index = (self.current_index + 1) % len(self.images)
+        self.update_image()
+        self.update_progress()
+
+
 
     def fast_forward(self):
         # Advance to the next image
@@ -245,8 +323,11 @@ class ImageViewer(tk.Frame):
 
     def update_progress(self):
         # Update the progress bar with the current image index
-        self.progress_bar.config(value=self.current_index)
+        # self.progress_bar.config(value=self.current_index)
         self.seeker.set(self.current_index)
+        self.update_index_label()
+
+    def update_index_label(self):
         self.index_label.config(text=f"Index: {self.current_index}")
 
 root = tk.Tk()
