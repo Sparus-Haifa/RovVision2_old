@@ -6,6 +6,8 @@ import csv
 import os
 
 CONTROL_FRAME_HEIGHT = 200
+# Set the indices of the markers
+marker_indices = [0, 2, 4, 6, 8]
 
 class ImageViewer(tk.Frame):
     def __init__(self, master=None):
@@ -20,7 +22,7 @@ class ImageViewer(tk.Frame):
         self.current_index = 0
         self.images = []
         # self.update_image()
-        self.paused = False
+        self.paused = True
         self.speed = 1.0
 
         # Bind the resize event to the callback function
@@ -71,9 +73,21 @@ class ImageViewer(tk.Frame):
         self.progress_bar = ttk.Progressbar(self.control_frame, orient="horizontal", length=200)
         self.progress_bar.pack(side=tk.TOP, fill=tk.X, expand=True)
 
+        # Create a seeker frame
+        self.seeker_frame = tk.Frame(self)
+        self.seeker_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=True)
+
+        # Create the canvas to draw the markers on
+        self.canvas = tk.Canvas(self.seeker_frame, width=400, height=20)
+        self.canvas.pack(side='bottom', fill=tk.X, expand=True)
+
+
         # Create the seeker
-        self.seeker = ttk.Scale(self.control_frame, from_=0, to=100, orient='horizontal', command=self.show_image_at_index)
+        self.seeker = ttk.Scale(self.seeker_frame, from_=0, to=100, orient='horizontal', command=self.show_image_at_index)
         self.seeker.pack(side='bottom', fill=tk.X, expand=True)
+
+        # Bind the <Configure> event to the seeker
+        self.seeker.bind('<Configure>', self.draw_markers)
 
         # Create the status label
         self.status_label = tk.Label(self.control_frame, text="Status")
@@ -82,6 +96,24 @@ class ImageViewer(tk.Frame):
         # Create an index label
         self.index_label = tk.Label(self.control_frame, text="Index")
         self.index_label.pack(side="bottom", fill=tk.X)
+
+    def draw_markers(self, event):
+        print("draw_markers")
+        # Clear the canvas
+        self.canvas.delete('all')
+        # Calculate the width and height of the seeker
+        width = self.seeker.winfo_width()
+        height = self.seeker.winfo_height()
+        # Calculate the distance between each marker
+        marker_distance = width / (len(self.images) - 1)
+        # marker_distance = min(width / (len(self.images) - 1), 2)
+        # marker_distance = width / (6 - 1)
+
+        # Draw a vertical line at each marker index
+        # for index in marker_indices:
+        for index in range(len(self.images)):
+            x = index * marker_distance
+            self.canvas.create_line(x, 0, x, height, fill='red')
 
     def show_image_at_index(self, index):
         pass
@@ -117,7 +149,7 @@ class ImageViewer(tk.Frame):
         self.update_image()
         self.progress_bar.config(maximum=len(self.images))
         self.seeker.config(to=len(self.images))
-        self.paused = False
+        self.paused = True
         self.speed = 1.0
 
     def update_image(self):
@@ -173,6 +205,8 @@ class ImageViewer(tk.Frame):
         self.image_label.config(image=self.image)
 
     def play_pause(self):
+        print("play_pause")
+        print("paused", self.paused)
         if self.paused:
             # Change the button text to "Pause" and start the update loop
             self.play_pause_button.config(text="Pause")
