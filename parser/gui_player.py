@@ -150,6 +150,59 @@ class ImageViewer(tk.Frame):
         # Bind the <Return> key to the treeview
         self.sections_treeview.bind("<Return>", self.edit_section)
 
+        # Create a "Save" button
+        self.save_button = tk.Button(self.sections_frame, text="Save", command=self.save_sections)
+        self.save_button.pack(side="bottom")
+
+        # Create a "New Section" button
+        self.new_section_button = tk.Button(self.sections_frame, text="New Section", command=self.new_section)
+        self.new_section_button.pack(side="bottom")
+
+        # Create a "Delete Section" button
+        self.delete_section_button = tk.Button(self.sections_frame, text="Delete Section", command=self.delete_section)
+        self.delete_section_button.pack(side="bottom")
+
+
+    def new_section(self):
+        print("new_section")
+        # Create a new section
+        # Get the last index
+        last_index = self.sections_treeview.index("end")
+        # Insert a new item
+        self.sections_treeview.insert("", last_index, text="Section " + str(last_index), values=(0, 0, ""))
+        # Edit the new item
+        self.sections_treeview.edit("Section " + str(last_index))
+
+
+    def delete_section(self):
+        print("delete_section")
+        # Delete the selected section
+        # Get the selected item
+        item = self.sections_treeview.selection()[0]
+        # Delete the item
+        self.sections_treeview.delete(item)
+
+        
+
+    def save_sections(self):
+        print("save_sections")
+        # Save the sections to a file
+        # Get the data from the treeview
+        data = self.sections_treeview.get_children()
+        # Create a list to hold the data
+        self.sections = []
+        # Loop through the data
+        for item in data:
+            # Get the values
+            values = self.sections_treeview.item(item, "values")
+            # Append the values to the list
+            self.sections.append(values)
+
+        # Update the markers
+        self.draw_markers(None)
+
+
+
     def edit_section(self, event):
         print("edit_section")
         # Get the selected item
