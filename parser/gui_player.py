@@ -23,20 +23,12 @@ class ImageViewer(tk.Frame):
         self.file_path = None
         self.sections_file_path = None
         self.sections = []
-        # Set the indices of the markers
-        # self.marker_indices = []
-        # self.update_image()
         self.paused = True
         self.speed = 1.0
 
         # Bind the resize event to the callback function
         self.bind("<Configure>", self.on_resize)
 
-        # Bind the <Left> and <Right> events to the functions
-        # self.bind_all('<KeyPress-Left>', self.show_previous_image)
-        # self.bind_all('<KeyPress-Right>', self.show_next_image)
-
-        # self.start_keypresses()
 
         self.bind_all('<KeyPress-Left>', self.show_previous_image)
         self.bind_all('<KeyPress-Right>', self.show_next_image)
@@ -71,13 +63,14 @@ class ImageViewer(tk.Frame):
         self.play_pause_button = tk.Button(self.control_frame, text="Play", command=self.play_pause)
         self.play_pause_button.pack(side="left")
 
+        # Create the "Rewind" button
+        self.rewind_button = tk.Button(self.control_frame, text="<<", command=self.rewind)
+        self.rewind_button.pack(side="left")
+
         # Create the "Fast Forward" button
         self.fast_forward_button = tk.Button(self.control_frame, text=">>", command=self.fast_forward)
         self.fast_forward_button.pack(side="left")
 
-        # Create the "Rewind" button
-        self.rewind_button = tk.Button(self.control_frame, text="<<", command=self.rewind)
-        self.rewind_button.pack(side="left")
 
         # Create the speed scale
         self.speed_scale = tk.Scale(self.control_frame, from_=1.0, to=1000.0, resolution=1.0, orient="horizontal", command=self.set_speed)
@@ -117,6 +110,105 @@ class ImageViewer(tk.Frame):
         # Set the initial state of the button as disabled
         self.enable_disable_button.configure(state="disabled")
 
+        # Create a "Open Sections" button
+        self.open_sections_button = tk.Button(self.control_frame, text="Open Sections", command=self.open_sections)
+        self.open_sections_button.pack(side="right")
+        # Set the initial state of the button as disabled
+        self.open_sections_button.configure(state="disabled")
+
+
+    def open_sections(self):
+        print("open_sections")
+        # Open sections in a new window in an edtable table
+        # Create a new window
+        self.sections_window = tk.Toplevel(self)
+        self.sections_window.title("Sections")
+        # Create a frame for the sections window
+        self.sections_frame = tk.Frame(self.sections_window)
+        self.sections_frame.pack(fill=tk.BOTH, expand=True)
+        # Create a treeview for the sections
+        self.sections_treeview = ttk.Treeview(self.sections_frame)
+        self.sections_treeview.pack(fill=tk.BOTH, expand=True)
+        # Create the columns
+        self.sections_treeview["columns"] = ("start_index", "end_index", "recording_name")
+        # Create the headings
+        self.sections_treeview.heading("#0", text="Section")
+        self.sections_treeview.heading("start_index", text="Start Index")
+        self.sections_treeview.heading("end_index", text="End Index")
+        self.sections_treeview.heading("recording_name", text="Recording Name")
+        # Create the columns
+        self.sections_treeview.column("#0", width=100)
+        self.sections_treeview.column("start_index", width=100)
+        self.sections_treeview.column("end_index", width=100)
+        self.sections_treeview.column("recording_name", width=100)
+        # Create the data
+        for i in range(len(self.sections)):
+            self.sections_treeview.insert("", i, text="Section " + str(i), values=(self.sections[i][0], self.sections[i][1], self.sections[i][2]))
+
+        # Make the treeview editable
+        self.sections_treeview.editable = True
+        # Bind the <Return> key to the treeview
+        self.sections_treeview.bind("<Return>", self.edit_section)
+
+    def edit_section(self, event):
+        print("edit_section")
+        # Get the selected item
+        item = self.sections_treeview.selection()[0]
+        # Get the column
+        column = self.sections_treeview.identify_column(event.x)
+        # Get the value
+        value = self.sections_treeview.item(item, "values")
+        column = [self.sections_treeview.identify_column(event.x)] # '#1', '#2', '#3', '#4'
+        print(column)
+        print(value)
+        # fix column
+        column = column[0].replace("#", "")
+        column = int(column) - 1
+        print(column)
+        value = value[column]
+
+        # Create a new window
+        self.edit_window = tk.Toplevel(self)
+        self.edit_window.title("Edit Section")
+        # Create a frame for the edit window
+        self.edit_frame = tk.Frame(self.edit_window)
+        self.edit_frame.pack(fill=tk.BOTH, expand=True)
+        # Create a label for the value
+        self.edit_label = tk.Label(self.edit_frame, text="Value: ")
+        self.edit_label.pack(side="left")
+        # Create an entry for the value
+        self.edit_entry = tk.Entry(self.edit_frame)
+        self.edit_entry.insert(0, value)
+        self.edit_entry.pack(side="left")
+        # Create a button to save the changes
+        self.edit_save_button = tk.Button(self.edit_frame, text="Save", command=self.save_changes)
+        self.edit_save_button.pack(side="left")
+        # Create a button to cancel the changes
+        self.edit_cancel_button = tk.Button(self.edit_frame, text="Cancel", command=self.edit_window.destroy)
+        self.edit_cancel_button.pack(side="left")
+        # Store the item and column in the window
+        self.edit_window.item = item
+        self.edit_window.column = column
+
+    def save_changes(self):
+        print("save_changes")
+        # Get the value from the entry
+        value = self.edit_entry.get()
+        # Get the item and column from the window
+        item = self.edit_window.item
+        column = self.edit_window.column
+        # Update the value in the treeview
+        self.sections_treeview.set(item, column=column, value=value)
+        # Destroy the window
+        self.edit_window.destroy()
+
+
+
+
+
+
+
+
     # Create a function to open the sections csv file
     def enable_disable_sections(self):
         print("enable_disable_sections")
@@ -138,6 +230,9 @@ class ImageViewer(tk.Frame):
 
         # Update markers
         self.draw_markers(None)
+
+        # Set the "Open Sections" button to active
+        self.open_sections_button.configure(state="active")
 
 
 
@@ -270,6 +365,7 @@ class ImageViewer(tk.Frame):
         if self.paused:
             self.paused = False
             self.play_pause_button.config(text="Pause")
+            self.update_loop()
         else:
             self.paused = True
             self.play_pause_button.config(text="Play")
