@@ -25,7 +25,7 @@ class ChunksParser:
 
         # load the chunks.csv file
         chunks_df = pd.read_csv(os.path.join(os.path.dirname(self.csv_path), 'chunks.csv'), index_col=0)
-        chunks_train_set, chunks_test_set = train_test_split(chunks_df, test_size=0.3)
+        chunks_train_set, chunks_test_set = train_test_split(chunks_df, test_size=0.2)
         chunks_train_set, chunks_validation_set = train_test_split(chunks_train_set, test_size=10 / 70)
 
         print('chunks_train_set', chunks_train_set.shape)

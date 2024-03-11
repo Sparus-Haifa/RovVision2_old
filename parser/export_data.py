@@ -111,9 +111,9 @@ def main():
 
     #export images and metadata.csv
     
-    # exporter.run_player()
+    exporter.run_player()
 
-    # exporter.merge_csv()
+    exporter.merge_csv()
 
     exporter.find_pairs()
 

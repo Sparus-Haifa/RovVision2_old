@@ -180,6 +180,9 @@ while True:
     flc_filename = f"{flc:08d}.tiff"
     fls_filename = f"{fls:08d}.tiff"
 
+    # flc_filename = flc
+    # fls_filename = fls
+
     print("opening image")
     print(main_path, bagfile, "imgs", flc)
     flc_path = os.path.join(main_path, bagfile, 'imgs', flc_filename)
@@ -247,6 +250,15 @@ while True:
         print('free run')
         highSpeed = False
         curDelay = 1
+    elif key == ord('h'):
+        print('skip 50')
+        index+=50
+    elif key == ord('g'):
+        print('back 50')
+        index-=50
+
+
+
     elif key == 81: #left
         print('left')
         index-=2
@@ -283,6 +295,7 @@ while True:
                 print("index",index)
                 print("back to previous section, skipping last image")
                 continue
+                
 
 
 
@@ -300,6 +313,81 @@ while True:
         else:
             play_sections = True
             print("play sections")
+        limits_df = pd.read_csv(os.path.join(main_path, 'sections.csv'))
+    elif key == ord("d"):
+        print("skip")
+        if play_sections:
+            print("jump to the next bagfile or to the next section")
+            # if there is another section, jump to it
+            if section < num_of_sections - 1:
+                print("there is another section, jump to it")
+                section += 1
+                section_index = limits['first_image'].iloc[section]
+                index = df.loc[(df['bagfile'] == bagfile) & (df['Index'] == section_index)].index[0]
+                continue
+            
+        df_selected = limits_df[limits_df['bagfile'].isin([bagfile])]
+
+        # Get the next value after 'a'
+        next_bagfile = limits_df.loc[df_selected.index[-1] + 1, 'bagfile']
+        print("next bagfile", next_bagfile)
+        # exit()
+        # set the index to the first image of the next bagfile from the df dataframe
+        index = df.loc[(df['bagfile'] == next_bagfile) & (df['Index'] == limits_df.loc[limits_df['bagfile'] == next_bagfile]['first_image'].iloc[0])].index[0]
+        print("index", index)
+        section = 0
+        # exit()
+        continue
+    
+    elif key == ord("a"):
+        print("back")
+        if play_sections:
+            # if we back to the previous section, we need to skip the last image of the section according to the limits
+            if df.iloc[index]['bagfile'] != bagfile:
+                # if we back to the previous bagfile, we need to skip the last image of the bagfile according to the limits
+                # select the bagfile, one above the current one
+                bagfile = df.iloc[index]['bagfile']
+                print("previous bagfile", bagfile)
+                limits = limits_df.loc[limits_df['bagfile'] == bagfile]
+                section = len(limits) - 1
+                print(limits)
+                section_index = limits['first_image'].iloc[section]
+                print("section_index", section_index)
+                # get index of the last image of the previous bagfile
+                index = df.loc[(df['bagfile'] == bagfile) & (df['Index'] == section_index)].index[0]
+                print("index",index)
+                print("back to previous bagfile, skipping last image")
+                continue
+
+
+            print("section_index", section_index)
+            print("limits['first_image'].iloc[section]", limits['first_image'].iloc[section])
+            if section_index <= limits['first_image'].iloc[section]:
+                print("section_index is less than the lower limit, jump to the lower limit")
+                # select the section, one above the current one
+                section = max(0, section - 1)
+                print("previous section", section)
+                section_index = limits['first_image'].iloc[section]
+                print("section_index", section_index)
+                # get index of the last image of the previous section
+                index = df.loc[(df['bagfile'] == bagfile) & (df['Index'] == section_index)].index[0]
+                print("index",index)
+                print("back to previous section, skipping last image")
+                continue
+        
+        df_selected = limits_df[limits_df['bagfile'].isin([bagfile])]
+
+        print("df_selected", df_selected)
+
+        # Get the next value after 'a'
+        next_bagfile = limits_df.loc[df_selected.index[-1], 'bagfile']
+        print("next bagfile", next_bagfile)
+        # exit()
+        # set the index to the first image of the next bagfile from the df dataframe
+        index = df.loc[(df['bagfile'] == next_bagfile) & (df['Index'] == limits_df.loc[limits_df['bagfile'] == next_bagfile]['first_image'].iloc[0])].index[0]
+        print("index", index)
+        section = 0
+        
     # else:
     #     print('key pressed ', key)
 

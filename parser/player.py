@@ -167,13 +167,31 @@ class Player:
         # print(im.shape)
         # print(im.dtype)
 
-        curImName = '%08d'%self.frameId
+        # set
+
+        cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
+        cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
+
+        # curImName = '%08d'%self.frameId
+        curImName = cur_date + '_' + cur_time
+
+        print('curTopic', curTopic)
+        subfolder = 'camera'
+        if curTopic != b'topic_stereo_camera':
+            subfolder = 'sonar'
+        # exit()
 
         if self.saveTiff: # create imgs folder
             if self.imgsPath is None:
                 self.imgsPath = os.path.join(self.recPath, 'imgs')
                 if not os.path.exists(self.imgsPath):
                     os.system('mkdir -p %s'%self.imgsPath)
+            camera_path = os.path.join(self.imgsPath, 'camera')
+            if not os.path.exists(camera_path):
+                os.system('mkdir -p %s'%camera_path)
+            sonar_path = os.path.join(self.imgsPath, 'sonar')
+            if not os.path.exists(sonar_path):
+                os.system('mkdir -p %s'%sonar_path)
         
         if self.showVideo:
             # print('showVideo')
@@ -217,7 +235,7 @@ class Player:
             # print("d2")
 
 
-            if self.saveTiff:
+            if self.saveTiff and False: # ignore HQ tiff
                 print("saving tif")
                 # curImName = '%08d.tiff'%frameId
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
@@ -282,7 +300,8 @@ class Player:
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
                 # cv2.imwrite( os.path.join(imgsPath, curImName), im )
                 # print(self.imgsPath)
-                image_path = os.path.join(self.imgsPath, curImName + ".tiff")
+                # image_path = os.path.join(self.imgsPath, curImName + ".tiff") # changed to JPEG
+                image_path = os.path.join(self.imgsPath, subfolder, curImName + ".jpg") # changed to JPEG
                 print(image_path)
                 cv2.imwrite( image_path, imLowRes )
                 # print(im[:20])
