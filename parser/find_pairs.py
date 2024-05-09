@@ -106,8 +106,8 @@ class PairFinder:
             else:
                 FLS_idx = [self.find_closest_index(element, FLS_idx) for element in FLC_idx]
 
-            df_FLC = df_tmp.loc[FLC_idx]['filename']
-            df_FLS = df_tmp.loc[FLS_idx]['filename']
+            df_FLC = df_tmp.loc[FLC_idx]['value']
+            df_FLS = df_tmp.loc[FLS_idx]['value']
             df_Bag = df_tmp.loc[FLC_idx]['bagfile']
             
             

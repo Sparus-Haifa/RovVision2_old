@@ -90,7 +90,7 @@ class Player:
 
 
         # dataframe variables
-        self.columns = ['topic', 'bagfile', 'filename', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
+        self.columns = ['topic', 'bagfile', 'value', 'date', 'time']
         self.df_msgs_info_cur_bag = pd.DataFrame(columns=self.columns)
         if self.showVideo:
             # print('bla')
@@ -128,33 +128,21 @@ class Player:
             sys.exit(1)
 
 
-    def create_data_frame(self, topic, bagfile, filename, date, time, latitude, longitude, altitude, yaw, pitch, roll, velocity_x, velocity_y, velocity_z, depth):
+    def create_data_frame(self, topic, bagfile, value, timestamp):
         # global df_msgs_info_cur_bag
         # print('create_data_frame')
         msg_info = {}
         msg_info['topic'] =  topic.decode('utf-8')
         msg_info['bagfile'] = bagfile
-        msg_info['filename'] = filename
-        msg_info['date'] = date
-        msg_info['time'] = time
+        msg_info['value'] = value
+        # msg_info['date'] = date
+        # msg_info['time'] = time
+        msg_info['timestamp'] = timestamp
         
-        nav_info = {}
-        nav_info['latitude'] = latitude
-        nav_info['longitude'] = longitude
-        nav_info['altitude'] = altitude
-        nav_info['yaw'] = yaw
-        nav_info['pitch'] = pitch
-        nav_info['roll'] = roll
-        nav_info['velocity_x'] = velocity_x
-        nav_info['velocity_y'] = velocity_y
-        nav_info['velocity_z'] = velocity_z
-        nav_info['depth'] = depth
-
         msg_df = pd.DataFrame(msg_info, index=[0])
-        nav_df = pd.DataFrame(nav_info, index=[0])
-        # df_msgs_info_cur_bag = df_msgs_info_cur_bag.append([msg_info, nav_info], ignore_index=True)
-        new_row = pd.concat([msg_df, nav_df], axis=1, join="inner")
-        self.df_msgs_info_cur_bag = self.df_msgs_info_cur_bag.append(new_row, ignore_index=True)
+        # nav_df = pd.DataFrame(nav_info, index=[0])
+        # new_row = pd.concat([msg_df, nav_df], axis=1, join="inner")
+        self.df_msgs_info_cur_bag = self.df_msgs_info_cur_bag.append(msg_df, ignore_index=True)
 
 
    
@@ -172,8 +160,8 @@ class Player:
         cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
         cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
 
-        # curImName = '%08d'%self.frameId
-        curImName = cur_date + '_' + cur_time
+        curImName = '%08d'%self.frameId
+        # curImName = cur_date + '_' + cur_time
 
         print('curTopic', curTopic)
         subfolder = 'camera'
@@ -300,8 +288,8 @@ class Player:
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
                 # cv2.imwrite( os.path.join(imgsPath, curImName), im )
                 # print(self.imgsPath)
-                # image_path = os.path.join(self.imgsPath, curImName + ".tiff") # changed to JPEG
-                image_path = os.path.join(self.imgsPath, subfolder, curImName + ".jpg") # changed to JPEG
+                image_path = os.path.join(self.imgsPath, curImName + ".png") # changed to JPEG
+                # image_path = os.path.join(self.imgsPath, subfolder, curImName + ".jpg") # changed to JPEG
                 print(image_path)
                 cv2.imwrite( image_path, imLowRes )
                 # print(im[:20])
@@ -340,18 +328,17 @@ class Player:
 
         # print("d8")
 
-        # generateDataFrame = True
+        generateDataFrame = True
         # if self.saveTiff and generateDataFrame:
         if self.generateDataFrame:
             cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
             cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
             data_frame = self.create_data_frame(topic=curTopic, 
                 bagfile=os.path.basename(self.recPath), 
-                filename=curImName, # os.path.join(self.recPath, 'imgs', curImName), 
-                date=cur_date, time=cur_time,
-                latitude=None, longitude=None, altitude=None, yaw=None, pitch=None, roll=None,
-                velocity_x=None, velocity_y=None, velocity_z=None,
-                depth=None
+                value=curImName,
+                timestamp=timestamp, 
+                # date=cur_date,
+                # time=cur_time
                 )
             
 
@@ -549,15 +536,45 @@ class Player:
                             #print('-->', curTopic)
                             topicPubDict[curTopic].send_multipart(videoMsg)
                             
-                    else:
+                    else: # Process telemetry
                         #recTs = data[0]
                         # if curTopic != zmq_topics.topic_sonar:
                         telData = pickle.loads(data[1][1])
+
+                        # import ipdb; ipdb.set_trace()
+
+                        # print('telData', telData)
+
+                        # if type(telData) is dict and 'depth' in telData.keys():
+
+                        # if 'depth' in telData.keys():
+                        #     pass
+
+
+                        
+
                         # print('sending...')
                         topicPubDict[curTopic].send_multipart([curTopic, pickle.dumps(telData)] )
                         
                         #pass
                         #topicPubDict[curTopic].send_multipart(data[1])
+
+                        if self.generateDataFrame and type(telData) is dict and 'depth' in telData.keys():
+                            timestamp = curData[0]
+                            cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
+                            cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
+                            curImName = cur_date + '_' + cur_time
+                            data_frame = self.create_data_frame(topic=curTopic, 
+                                bagfile=os.path.basename(self.recPath), 
+                                value=telData['depth'],
+                                timestamp=timestamp,  
+                                # date=cur_date,
+                                # time=cur_time
+                                )
+
+                    # Debug Break
+                    if self.frameId > 100:
+                        break
                 
                     curData = nextData
                     nextData = pickle.load(self.telFid)

@@ -37,7 +37,7 @@ class Exporter:
 
     def merge_csv(self):
         # merge all CSVs to one
-        columns = ['topic', 'bagfile', 'filename', 'date', 'time', 'latitude', 'longitude', 'altitude', 'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z', 'depth']
+        columns = ['topic', 'bagfile', 'value', 'date', 'time']
         df_msgs_info_all = pd.DataFrame(columns=columns)
 
         for record in self.all_records_directories:
@@ -99,7 +99,7 @@ def main():
 
     # exporter = Exporter(recPath=args.recPath, showVideo=args.showVideo,  freeRun=args.freeRun, saveTiff=args.saveTiff, saveAvi=args.saveAvi, saveMetadata=args.saveMetadata)
 
-    recPath = "/workspaces/RovVision2_old/bags"
+    recPath = "/workspaces/RovVision2_Sonar/bags"
     showVideo = False
     freeRun = True
     saveTiffs = True
