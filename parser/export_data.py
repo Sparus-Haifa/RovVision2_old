@@ -113,9 +113,9 @@ def main():
     
     exporter.run_player()
 
-    exporter.merge_csv()
+    # exporter.merge_csv()
 
-    exporter.find_pairs()
+    # exporter.find_pairs()
 
     # exporter.split_pairs()
 

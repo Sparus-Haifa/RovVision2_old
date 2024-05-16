@@ -128,16 +128,17 @@ class Player:
             sys.exit(1)
 
 
-    def create_data_frame(self, topic, bagfile, value, timestamp):
+    def create_data_frame(self, topic, bagfile, value, date, time, timestamp=None):
         # global df_msgs_info_cur_bag
         # print('create_data_frame')
         msg_info = {}
         msg_info['topic'] =  topic.decode('utf-8')
         msg_info['bagfile'] = bagfile
         msg_info['value'] = value
-        # msg_info['date'] = date
-        # msg_info['time'] = time
-        msg_info['timestamp'] = timestamp
+        msg_info['date'] = date
+        msg_info['time'] = time
+        if timestamp is not None:
+            msg_info['timestamp'] = timestamp
         
         msg_df = pd.DataFrame(msg_info, index=[0])
         # nav_df = pd.DataFrame(nav_info, index=[0])
@@ -160,8 +161,8 @@ class Player:
         cur_date = datetime.fromtimestamp(timestamp).strftime("%Y_%m_%d")
         cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
 
-        curImName = '%08d'%self.frameId
-        # curImName = cur_date + '_' + cur_time
+        # curImName = '%08d'%self.frameId
+        curImName = cur_date + '_' + cur_time
 
         print('curTopic', curTopic)
         subfolder = 'camera'
@@ -288,8 +289,8 @@ class Player:
                 #cv2.imwrite( os.path.join(imgsPath, curImName), im,  [cv2.IMWRITE_JPEG_QUALITY, 100] )
                 # cv2.imwrite( os.path.join(imgsPath, curImName), im )
                 # print(self.imgsPath)
-                image_path = os.path.join(self.imgsPath, curImName + ".png") # changed to JPEG
-                # image_path = os.path.join(self.imgsPath, subfolder, curImName + ".jpg") # changed to JPEG
+                # image_path = os.path.join(self.imgsPath, curImName + ".tiff") # changed to JPEG
+                image_path = os.path.join(self.imgsPath, subfolder, curImName + ".jpg") # changed to JPEG
                 print(image_path)
                 cv2.imwrite( image_path, imLowRes )
                 # print(im[:20])
@@ -335,10 +336,8 @@ class Player:
             cur_time = datetime.fromtimestamp(timestamp).strftime("%H_%M_%S_%f")
             data_frame = self.create_data_frame(topic=curTopic, 
                 bagfile=os.path.basename(self.recPath), 
-                value=curImName,
-                timestamp=timestamp, 
-                # date=cur_date,
-                # time=cur_time
+                value=curImName, 
+                date=cur_date, time=cur_time, timestamp=timestamp
                 )
             
 
@@ -566,10 +565,8 @@ class Player:
                             curImName = cur_date + '_' + cur_time
                             data_frame = self.create_data_frame(topic=curTopic, 
                                 bagfile=os.path.basename(self.recPath), 
-                                value=telData['depth'],
-                                timestamp=timestamp,  
-                                # date=cur_date,
-                                # time=cur_time
+                                value=telData['depth'],  
+                                date=cur_date, time=cur_time, timestamp=timestamp
                                 )
 
                     # Debug Break
