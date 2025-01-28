@@ -201,3 +201,7 @@ RUN pip3 install scikit-learn
 
 # moviePy depends:
 # RUN apt-get install -y imageio
+
+
+
+RUN apt-get update && apt-get install joystick -y
